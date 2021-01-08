@@ -181,7 +181,7 @@
                                                 <img src="{{ a.thumbnail.url }}" alt=""/>
                                             </div>
                                             <div class="item_text">
-                                                <h6>{{ a.title }}</h6>
+                                                <a href="{% url 'blog:detail' a.slug %}"><h6>{{ a.title }}</h6></a>
                                                 <p><i class="fa fa-clock-o"></i> {{ a.jpublish }}</p>
                                             </div>
                                         </div>

@@ -19,7 +19,7 @@
                             <li><a href="#" class="text-black">2 comments</a></li>
                         </ol>
                         <a href="article_detail.html"><h2>{{ latest.title }}</h2></a>
-                        <p>{{ latest.description|truncatewords:70 }}</p>
+                        <p>{{ latest.description|truncatewords:70 |safe }}</p>
 
 
                         <a href="#" class="btn btn-default m-top-20"> مشاهده مقاله <i
@@ -39,7 +39,7 @@
                 <img class="img-circle" src="{{ owner.thumbnail.url }}" alt=""/>
 
                 <h6 class="m-top-20">{{ owner.title }}</h6>
-                <p class="m-top-20">{{ owner.description }}</p>
+                <p class="m-top-20">{{ owner.description|safe  }}</p>
                 <img class="m-top-20" src="{% static 'images/blog-sign.png' %}" alt=""/>
             </div>
 
@@ -68,7 +68,7 @@
                             <li><a href="#" class="text-black">{{ article.jpublish }}</a></li>
                         </ol>
                         <a href="{% url 'blog:detail' article.slug %}"><h5>{{ article.title }}</h5></a>
-                        <p class="m-top-20">{{ article.description|truncatewords:20 }}</p>
+                        <p class="m-top-20">{{ article.description|truncatewords:20|safe }}</p>
                     </div>
                 </div><!-- End off col-md-4 -->
             {% endfor %}

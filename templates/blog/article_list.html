@@ -22,7 +22,7 @@
                         <p>{{ latest.description|truncatewords:70 |safe }}</p>
 
 
-                        <a href="#" class="btn btn-default m-top-20"> مشاهده مقاله <i
+                        <a href="{% url 'blog:detail' latest.slug %}" class="btn btn-default m-top-20"> مشاهده مقاله <i
                                 class="fa fa-long-arrow-right"></i></a>
                     </div>
                 </div>

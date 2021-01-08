@@ -15,7 +15,6 @@ class ArticleList(ListView):
         return context
 
 class ArticleDetail(ListView):
-    paginate_by=9
     template_name="blog/article_detail.html"
     def get_queryset(self):
         global slug,article
@@ -27,4 +26,5 @@ class ArticleDetail(ListView):
         context=super().get_context_data(**kwargs)
         context['object']=get_object_or_404(article,slug=slug)
         context['owner']=Owner.objects.first()
+        context['res_articles']=article[:5]
         return context

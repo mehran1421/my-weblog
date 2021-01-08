@@ -6,6 +6,7 @@ from .utils import unique_slug_generator
 from django.db.models.signals import pre_save
 from extension.utils import jalaly_converter
 from django.template.defaultfilters import slugify
+from ckeditor_uploader.fields import RichTextUploadingField
 # Create your models here.
 
 def get_filename_ext(filepath):
@@ -22,8 +23,8 @@ def upload_image_path(instance, filename):
 
 class Owner(models.Model):
     title = models.CharField(max_length=200, verbose_name="تایتل")
-    description = models.TextField(verbose_name="توضیحات")
-    more=models.TextField(default='',verbose_name="توضیحات بیشتر")
+    description = RichTextUploadingField(verbose_name="توضیحات")
+    more=RichTextUploadingField(verbose_name="توضیحات بیشتر")
     thumbnail = models.ImageField(upload_to="images", verbose_name="عکس")
     uni=models.CharField(max_length=200,verbose_name="دانشگاه")
     comp=models.CharField(max_length=200,default='دانشجو', verbose_name="شغل")
@@ -49,7 +50,7 @@ class Article(models.Model):
     slug=models.SlugField(blank=True,allow_unicode=True,verbose_name="عنوان")
     # category=models.ManyToManyField(Category,verbose_name="دسته بندی",related_name="articles")
     # author=models.ForeignKey(User,null=True,on_delete=models.SET_NULL,related_name="articles",verbose_name="نویسنده")
-    description=models.TextField(verbose_name="توضیحات")
+    description=RichTextUploadingField(verbose_name="توضیحات")
     thumbnail=models.ImageField(upload_to=upload_image_path,verbose_name="عکس")
     publish=models.DateTimeField(default=timezone.now,verbose_name="زمان")
     created=models.DateTimeField(auto_now_add=True,verbose_name="ساخته ")

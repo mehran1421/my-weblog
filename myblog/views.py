@@ -18,12 +18,13 @@ class ArticleDetail(ListView):
     paginate_by=9
     template_name="blog/article_detail.html"
     def get_queryset(self):
-        global slug
+        global slug,article
         slug=self.kwargs.get('slug')
-        return Article.objects.filter(status='p').order_by('-created')
+        article=Article.objects.filter(status='p').order_by('-created')
+        return article
 
     def get_context_data(self,**kwargs):
         context=super().get_context_data(**kwargs)
-        context['object']=get_object_or_404(Article.objects.filter(status='p'),slug=slug)
+        context['object']=get_object_or_404(article,slug=slug)
         context['owner']=Owner.objects.first()
         return context

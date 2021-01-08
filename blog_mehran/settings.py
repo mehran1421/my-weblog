@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'account.apps.AccountConfig',
     'myblog.apps.MyblogConfig',
     'extension',
+    'ckeditor',
 ]
 
 MIDDLEWARE = [
@@ -131,3 +132,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static", "static_root")
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "static", "media_root")
+
+# CKEDITOR
+CKEDITOR_UPLOAD_PATH = "uploads/"
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'full',
+    },
+}

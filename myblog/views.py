@@ -20,7 +20,7 @@ class ArticleDetail(ListView):
     def get_queryset(self):
         global slug
         slug=self.kwargs.get('slug')
-        return Article.objects.filter(status='p')
+        return Article.objects.filter(status='p').order_by('-created')
 
     def get_context_data(self,**kwargs):
         context=super().get_context_data(**kwargs)

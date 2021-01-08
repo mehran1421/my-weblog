@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from extension.utils import jalaly_converter
 # Create your models here.
 class Article(models.Model):
     Status_Choise=(
@@ -23,6 +24,10 @@ class Article(models.Model):
     def __str__(self):
         return self.title
 
+    def jpublish(self):
+        return jalaly_converter(self.publish)
+
+    jpublish.short_description = "زمان انتشار"
 
 class Owner(models.Model):
     title = models.CharField(max_length=200, verbose_name="تایتل")
@@ -43,3 +48,4 @@ class Owner(models.Model):
 
     def __str__(self):
         return self.title
+

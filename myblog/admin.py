@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import Article,Owner
 # Register your models here.
 class ArticleAdmin(admin.ModelAdmin):
-    list_display = ('title', 'slug', 'status')
+    list_display = ('title', 'slug', 'status','jpublish')
     list_filter = ('status', 'publish')
     search_fields = ('title', 'description')
 

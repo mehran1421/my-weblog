@@ -160,14 +160,11 @@
                         <div class="blog_saidbar sm-m-top-70">
                             {% block categorys %}
                                 <div class="said_ctg fix">
-                                    <h6 class="text-uppercase">CATEGORY</h6>
+                                    <h6 class="text-uppercase">دسته بندی ها</h6>
                                     <ul class="text-uppercase m-top-40">
-                                        <li><a href="">Fashion <span class="pull-right">(29)</span></a></li>
-                                        <li><a href="">Culinary <span class="pull-right">(29)</span></a></li>
-                                        <li><a href="">Photography <span class="pull-right">(29)</span></a></li>
-                                        <li><a href="">music <span class="pull-right">(29)</span></a></li>
-                                        <li><a href="">graphics <span class="pull-right">(29)</span></a></li>
-                                        <li><a href="">trend <span class="pull-right">(29)</span></a></li>
+                                        {% for cat in object.category.all %}
+                                            <li><a href="">{{ cat.title }}</a></li>
+                                        {% endfor %}
                                     </ul>
                                 </div>
                             {% endblock %}

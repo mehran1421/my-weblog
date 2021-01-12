@@ -21,6 +21,24 @@ def upload_image_path(instance, filename):
     final_name = f"{instance.id}-{instance.title}{ext}"
     return f"products/{final_name}"
 
+
+class Category(models.Model):
+    parent = models.ForeignKey('self', default=None, null=True, blank=True, on_delete=models.SET_NULL,
+                               related_name="children", verbose_name="زیردسته")
+
+    title = models.CharField(max_length=200, verbose_name="عنوان دسته بندی")
+    slug = models.SlugField(max_length=100, verbose_name="موضوع")
+    status = models.BooleanField(default=True, verbose_name="آیا نمایش داده شود؟")
+    position = models.IntegerField(verbose_name="پوزیشن")
+
+    class Meta:
+        verbose_name = "دسته بندی"
+        verbose_name_plural = "دسته بندی ها"
+        ordering = ['position']
+
+    def __str__(self):
+        return self.title
+
 class Owner(models.Model):
     title = models.CharField(max_length=200, verbose_name="تایتل")
     description = RichTextUploadingField(verbose_name="توضیحات")
@@ -48,7 +66,7 @@ class Article(models.Model):
     )
     title=models.CharField(max_length=200,verbose_name="تایتل")
     slug=models.SlugField(blank=True,allow_unicode=True,verbose_name="عنوان")
-    # category=models.ManyToManyField(Category,verbose_name="دسته بندی",related_name="articles")
+    category=models.ManyToManyField(Category,verbose_name="دسته بندی",related_name="articles")
     # author=models.ForeignKey(User,null=True,on_delete=models.SET_NULL,related_name="articles",verbose_name="نویسنده")
     description=RichTextUploadingField(verbose_name="توضیحات")
     thumbnail=models.ImageField(upload_to=upload_image_path,verbose_name="عکس")
@@ -71,6 +89,14 @@ class Article(models.Model):
         return jalaly_converter(self.publish)
 
     jpublish.short_description = "زمان انتشار"
+
+    def category_published(self):
+        return self.category.filter(status=True)
+
+    def category_to_string(self):
+        return ", ".join([cat.title for cat in self.category_published()])
+
+    category_to_string.short_description = "دسته بندی"
 
 
 def product_pre_save_receiver(sender, instance, *args, **kwargs):

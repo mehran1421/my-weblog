@@ -1,5 +1,6 @@
 {% extends 'blog/list.html' %}
 {% load static %}
+{% load base_tags %}
 {% block title %}
     وبلاگ شخصی
 {% endblock %}
@@ -35,26 +36,16 @@
 {% block owner_blog %}
     <div class="col-md-4">
         <div class="blog_fashion_right">
-            <div class="fashion_test text-center">
-                <img class="img-circle" src="{{ owner.thumbnail.url }}" alt=""/>
-
-                <h6 class="m-top-20">{{ owner.title }}</h6>
-                <p class="m-top-20">{{ owner.description|safe  }}</p>
-                <img class="m-top-20" src="{% static 'images/blog-sign.png' %}" alt=""/>
-            </div>
-
-            <div class="fashion_praspect m-top-40">
-                <div class="fashion_praspect_inner bg-black">
-                    <p class="text-white">{{ owner.more }}</p>
-                    <p class="text-white">_ mehran kamrani</p>
-                </div>
+            <div class="said_ctg fix">
+                {% category_navbar %}
             </div>
         </div>
     </div>
 {% endblock %}
 
 {% block article_list %}
-
+    {% block categorys_name %}
+    {% endblock %}
     <div class="row">
         <div class="blog_area fix">
             {% for article in object_list %}

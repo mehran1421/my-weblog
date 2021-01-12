@@ -9,6 +9,7 @@ class ArticleList(ListView):
     template_name="blog/article_list.html"
     queryset = Article.objects.filter(status='p').order_by('-created')
     paginate_by=9
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['owner']=Owner.objects.first()
@@ -17,7 +18,7 @@ class ArticleList(ListView):
 class ArticleDetail(ListView):
     template_name="blog/article_detail.html"
     def get_queryset(self):
-        global slug,article,category,count
+        global slug,article
         slug=self.kwargs.get('slug')
         article=Article.objects.filter(status='p').order_by('-created')
         return article
@@ -25,7 +26,6 @@ class ArticleDetail(ListView):
     def get_context_data(self,**kwargs):
         context=super().get_context_data(**kwargs)
         context['object']=get_object_or_404(article,slug=slug)
-        context['owner']=Owner.objects.first()
         context['res_articles']=article[:5]
         return context
 

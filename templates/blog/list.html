@@ -1,24 +1,5 @@
 {% extends 'blog/base.html' %}
 
-{% block head %}
-    <section id="hello" class="blog-banner bg-mega">
-        <div class="overlay"></div>
-        <div class="container">
-            <div class="row">
-                <div class="main_home text-center">
-                    <div class="about_text">
-                        <h1 class="text-white text-uppercase">وبلاگ مهران</h1>
-                        <ol class="breadcrumb">
-                            <li><a href="../index.html">خانه</a></li>
-                            <li class="active"><a href="{% url 'blog:articleList' %}">وبلاگ</a></li>
-                        </ol>
-                    </div>
-                </div>
-            </div><!--End off row-->
-        </div><!--End off container -->
-    </section> <!--End off Home Sections-->
-{% endblock %}
-
 {% block subhead %}
     <section id="blog_fashion" class="blog_fashion roomy-100">
         <div class="container">

@@ -1,28 +1,8 @@
 {% extends 'blog/base.html' %}
+{% load base_tags %}
 
 <div class="culmn">
     <!--Home Sections-->
-
-    {% block head %}
-        <section id="hello" class="blog-banner bg-mega">
-            <div class="overlay"></div>
-            <div class="container">
-                <div class="row">
-                    <div class="main_home text-center">
-                        <div class="about_text">
-                            <h1 class="text-white text-uppercase">وبلاگ شخصی</h1>
-                            <ol class="breadcrumb">
-                                <li><a href="../index.html">خانه</a></li>
-                                <li class="active"><a href="{% url 'blog:articleList' %}">وبلاگ</a></li>
-                            </ol>
-                        </div>
-                    </div>
-                </div><!--End off row-->
-            </div><!--End off container -->
-        </section> <!--End off Home Sections-->
-    {% endblock %}
-
-
     <!--Blog Features Section-->
     {% block subhead %}
         <section id="blog_details" class="blog_details roomy-100">
@@ -160,12 +140,15 @@
                         <div class="blog_saidbar sm-m-top-70">
                             {% block categorys %}
                                 <div class="said_ctg fix">
-                                    <h6 class="text-uppercase">دسته بندی ها</h6>
+                                    <h6 class="text-uppercase">دسته بندی این مقاله</h6>
                                     <ul class="text-uppercase m-top-40">
                                         {% for cat in object.category.all %}
                                             <li><a href="">{{ cat.title }}</a></li>
                                         {% endfor %}
                                     </ul>
+                                    <br/>
+                                    <br/>
+                                    {% category_navbar %}
                                 </div>
                             {% endblock %}
                             {% block resent_post %}

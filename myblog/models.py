@@ -21,6 +21,14 @@ def upload_image_path(instance, filename):
     final_name = f"{instance.id}-{instance.title}{ext}"
     return f"products/{final_name}"
 
+class ArticleManager(models.Manager):
+	def published(self):
+		return self.filter(status='p')
+
+
+class CategoryManager(models.Manager):
+	def active(self):
+		return self.filter(status=True)
 
 class Category(models.Model):
     parent = models.ForeignKey('self', default=None, null=True, blank=True, on_delete=models.SET_NULL,
@@ -38,6 +46,8 @@ class Category(models.Model):
 
     def __str__(self):
         return self.title
+
+    objects = CategoryManager()
 
 class Owner(models.Model):
     title = models.CharField(max_length=200, verbose_name="تایتل")
@@ -77,6 +87,7 @@ class Article(models.Model):
     class Meta:
         verbose_name="مقاله"
         verbose_name_plural="مقاله ها"
+        ordering = ['-created']
 
     def __str__(self):
         return self.title
@@ -97,6 +108,8 @@ class Article(models.Model):
         return ", ".join([cat.title for cat in self.category_published()])
 
     category_to_string.short_description = "دسته بندی"
+
+    objects = ArticleManager()
 
 
 def product_pre_save_receiver(sender, instance, *args, **kwargs):

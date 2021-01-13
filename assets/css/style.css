@@ -458,7 +458,7 @@ Extra height css
     margin-right: 15px;
 }
 .m-l-15{
-    margin-left: 15px; 
+    margin-left: 15px;
 }
 .m-top-10 {
     margin-top: 10px;
@@ -737,9 +737,9 @@ textarea::-ms-input-placeholder{
 }*/
 
 
-.transform_scal_rotate:hover img{ 
-    -webkit-transform: scale(1.1) rotate(4deg); 
-    transform: scale(1.1) rotate(4deg); 
+.transform_scal_rotate:hover img{
+    -webkit-transform: scale(1.1) rotate(4deg);
+    transform: scale(1.1) rotate(4deg);
 }
 
 .culmn{
@@ -808,23 +808,23 @@ textarea::-ms-input-placeholder{
 
 .object:nth-child(10){
     -webkit-animation-delay: 0.9s;
-    animation-delay: 0.9s;	
+    animation-delay: 0.9s;
 }
 .object:nth-child(9){
     -webkit-animation-delay: 0.8s;
-    animation-delay: 0.8s;	
-}	
+    animation-delay: 0.8s;
+}
 .object:nth-child(8){
     -webkit-animation-delay: 0.7s;
-    animation-delay: 0.7s;	
+    animation-delay: 0.7s;
 }
 .object:nth-child(7){
     -webkit-animation-delay: 0.6s;
-    animation-delay: 0.6s;	
+    animation-delay: 0.6s;
 }
 .object:nth-child(6){
     -webkit-animation-delay: 0.5s;
-    animation-delay: 0.5s;	
+    animation-delay: 0.5s;
 }
 .object:nth-child(5){
     -webkit-animation-delay: 0.4s;
@@ -832,21 +832,21 @@ textarea::-ms-input-placeholder{
 }
 .object:nth-child(4){
     -webkit-animation-delay: 0.3s;
-    animation-delay: 0.3s;		
+    animation-delay: 0.3s;
 }
 .object:nth-child(3){
     -webkit-animation-delay: 0.2s;
-    animation-delay: 0.2s;	
+    animation-delay: 0.2s;
 }
 .object:nth-child(2){
     -webkit-animation-delay: 0.1s;
     animation-delay: 0.1s;
-}						
+}
 
 @-webkit-keyframes animate {
 
     50% {
-        -ms-transform: translateX(-25px) scaleY(0.5); 
+        -ms-transform: translateX(-25px) scaleY(0.5);
         -webkit-transform: translateX(-25px) scaleY(0.5);
         transform: translateX(-25px) scaleY(0.5);
 
@@ -856,7 +856,7 @@ textarea::-ms-input-placeholder{
 
 @keyframes animate {
     50% {
-        -ms-transform: translateX(-25px) scaleY(0.5); 
+        -ms-transform: translateX(-25px) scaleY(0.5);
         -webkit-transform: translateX(-25px) scaleY(0.5);
         transform: translateX(-25px) scaleY(0.5);
     }
@@ -1056,14 +1056,14 @@ About section style
     font-weight: 400;
 }
 
-.main-gallery .button:focus, 
-.main-gallery .button:active:focus, 
-.main-gallery .button.active:focus, 
-.main-gallery .button.focus, 
-.main-gallery .button:active.focus, 
+.main-gallery .button:focus,
+.main-gallery .button:active:focus,
+.main-gallery .button.active:focus,
+.main-gallery .button.focus,
+.main-gallery .button:active.focus,
 .main-gallery .button.active.focus{
-    outline: 0; 
-    outline-offset:0; 
+    outline: 0;
+    outline-offset:0;
 }
 
 .main-gallery .button:hover {
@@ -1287,12 +1287,12 @@ Models Section style
 }
 .model_img img{
     width:100%;
-    -webkit-filter: grayscale(100%); 
+    -webkit-filter: grayscale(100%);
     filter: grayscale(100%);
 }
 .model_img:hover img{
     width:100%;
-    -webkit-filter: grayscale(0%); 
+    -webkit-filter: grayscale(0%);
     filter: grayscale(0%);
 }
 .model_caption{
@@ -1641,7 +1641,7 @@ Footer Section style
 
 /*========================================================
         Blog Page
-==========================================================*/ 
+==========================================================*/
 
 .main_blog_fashion{
 
@@ -1682,7 +1682,7 @@ Footer Section style
 
 .fashion_praspect_inner{
     padding:30px 40px 50px 20px;
-    transition: .3s; 
+    transition: .3s;
     transform: rotateY(25deg);
 }
 

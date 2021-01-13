@@ -1,6 +1,12 @@
-<h6 class="text-uppercase">دسته بندی ها</h6>
-<ul class="text-uppercase m-top-40">
+<h6>دسته بندی ها</h6>
+<ul id="nav">
     {% for cat in category %}
-        <li><a href="{% url 'blog:category' cat.slug %}">{{ cat.title }}</a></li>
+        {% if cat.parent == None %}
+            <li style="font-size: 40px !important;"><a href="{% url 'blog:category' cat.slug %}">{{ cat.title }}</a>
+                {% if cat.children.active %}
+                    {% include 'blog/partials/category_loop.html' %}
+                {% endif %}
+            </li>
+        {% endif %}
     {% endfor %}
 </ul>

@@ -40,7 +40,75 @@
 
     <script src="{% static 'js/vendor/modernizr-2.8.3-respond-1.4.2.min.js' %}"></script>
 </head>
+<style>
 
+    #nav ul {
+        padding-right: 0;
+        height: 30px;
+        width: 120px;
+    }
+
+    #nav ul li {
+        border-bottom: none;
+        height: 30px;
+        width: 120px;
+        line-height: 30px;
+        font-size: 30px;
+        display: inline-block;
+        float: left;
+        margin: 0 auto;
+    }
+
+    #nav ul li a {
+        text-decoration: none;
+        color: #000000;
+        display: block;
+        transition: .3s background-color;
+        padding: 0 24px;
+    }
+
+    #nav ul li a:hover {
+        background-color: #515d68;
+        color: #FFFFFF;
+    }
+
+    #nav a {
+        border-bottom: none;
+    }
+
+    #nav li ul {
+        position: absolute;
+        display: none;
+        width: inherit;
+    }
+
+    #nav li:hover ul {
+        display: block;
+    }
+
+    #nav ul li ul li {
+        display: block;
+        float: none !important; /* newly added */
+        height: auto; /* newly added */
+        line-height: 34px; /* newly added */
+    }
+
+    #nav ul li ul li ul {
+        position: absolute;
+        right: 100%;
+        top: 0;
+        display: none !important;
+    }
+
+    #nav ul > li > ul > li:hover > ul {
+        display: block !important;
+    }
+
+    #nav ul > li > ul > li > ul > li:hover > ul {
+        display: block !important;
+    }
+
+</style>
 <body style="direction: rtl" data-spy="scroll" data-target=".navbar-collapse">
 
 <div class="culmn">
@@ -89,7 +157,7 @@
         </div>
     </nav>
     <!--Home Sections-->
-        <section id="hello" class="blog-banner bg-mega">
+    <section id="hello" class="blog-banner bg-mega">
         <div class="overlay"></div>
         <div class="container">
             <div class="row">

@@ -12,6 +12,6 @@ def title(data="یادداشت های من"):
 @register.inclusion_tag("blog/partials/category_nav.html")
 def category_navbar():
     context={
-        "category":Category.objects.filter(status=True)
+        "category":Category.objects.active()
     }
     return context

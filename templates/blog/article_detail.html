@@ -142,7 +142,7 @@
                                 <div class="said_ctg fix">
                                     <h6 class="text-uppercase">دسته بندی این مقاله</h6>
                                     <ul class="text-uppercase m-top-40">
-                                        {% for cat in object.category.all %}
+                                        {% for cat in object.category.active %}
                                             <li><a href="{% url 'blog:category' cat.slug %}">{{ cat.title }}</a></li>
                                         {% endfor %}
                                     </ul>

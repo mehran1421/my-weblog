@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 class ArticleList(ListView):
     template_name="blog/article_list.html"
     queryset = Article.objects.published()
-    paginate_by=9
+    paginate_by=6
 
 class ArticleDetail(ListView):
     template_name="blog/article_detail.html"
@@ -27,7 +27,7 @@ class ArticleDetail(ListView):
 
 
 class CategoryList(ListView):
-    paginate_by=9
+    paginate_by=6
     template_name="blog/category_list.html"
 
     def get_queryset(self):
@@ -42,7 +42,7 @@ class CategoryList(ListView):
         return context
 
 class AuthorList(ListView):
-    paginate_by=3
+    paginate_by=6
     template_name="blog/author_list.html"
 
     def get_queryset(self):

@@ -57,7 +57,7 @@
                             <img src="{{ article.thumbnail.url }}" alt=""/>
                         </div>
                         <ol class="breadcrumb">
-                            <li><a href="#" class="text-black">مهران</a></li>
+                            <li><a href="{% url 'blog:author' article.author.username %}" class="text-black">{{article.author.get_full_name}}</a></li>
                             <li><a href="#" class="text-black">{{ article.jpublish }}</a></li>
                         </ol>
                         <a href="{% url 'blog:detail' article.slug %}"><h5>{{ article.title }}</h5></a>

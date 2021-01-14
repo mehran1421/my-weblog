@@ -2,13 +2,13 @@ import os
 import random
 from django.db import models
 from django.utils import timezone
-from django.utils.html import format_html
 from .utils import unique_slug_generator
-from django.db.models.signals import pre_save
+from django.utils.html import format_html
+from django.contrib.auth.models import User
 from extension.utils import jalaly_converter
+from django.db.models.signals import pre_save
 from django.template.defaultfilters import slugify
 from ckeditor_uploader.fields import RichTextUploadingField
-
 
 # Create your models here.
 
@@ -85,7 +85,7 @@ class Article(models.Model):
     title = models.CharField(max_length=200, verbose_name="تایتل")
     slug = models.SlugField(blank=True, allow_unicode=True, verbose_name="عنوان")
     category = models.ManyToManyField(Category, verbose_name="دسته بندی", related_name="articles")
-    # author=models.ForeignKey(User,null=True,on_delete=models.SET_NULL,related_name="articles",verbose_name="نویسنده")
+    author=models.ForeignKey(User,null=True,on_delete=models.SET_NULL,related_name="articles",verbose_name="نویسنده")
     description = RichTextUploadingField(verbose_name="توضیحات")
     thumbnail = models.ImageField(upload_to=upload_image_path, verbose_name="عکس")
     publish = models.DateTimeField(default=timezone.now, verbose_name="زمان")

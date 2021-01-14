@@ -21,6 +21,7 @@ from blog_mehran import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('myblog.urls')),
+    path('account/', include('account.urls')),
     path('ckeditor/', include('ckeditor_uploader.urls')),
 ]
 

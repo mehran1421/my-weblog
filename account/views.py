@@ -5,13 +5,11 @@ from django.contrib.auth.views import LoginView
 from myblog.models import Article
 from .forms import MyAuthForm
 
-
 # Create your views here.
 
 class ArticleList(LoginRequiredMixin,ListView):
     queryset = Article.objects.all()
     template_name = 'registration/home.html'
-
 
 
 class Login(LoginView):

@@ -20,8 +20,9 @@ class ArticleList(LoginRequiredMixin, ListView):
 
 class ArticleCreate(CreateView):
     model = Article
-    fields = ['title','slug','category','author','description','thumbnail','publish','status']
     template_name = "registration/article-create-update.html"
+    fields = ['title', 'slug', 'category', 'author', 'description', 'thumbnail', 'publish', 'status']
+
 
 
 class Login(LoginView):

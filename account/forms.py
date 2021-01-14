@@ -1,8 +1,8 @@
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm,AuthenticationForm
 from django import forms
-from django.contrib.auth import authenticate
 from django.utils.translation import ugettext_lazy as _
+
 
 class RegisterForm(UserCreationForm):
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput())
@@ -51,3 +51,5 @@ class MyAuthForm(AuthenticationForm):
     error_messages = {
         'invalid_login': _('نام کاربری یا رمز عبور، صحیح نمی باشد'),
     }
+
+

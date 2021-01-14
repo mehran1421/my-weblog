@@ -25,7 +25,7 @@
                                             <div class="head_text">
                                                 <h2>{{ object.title }}</h2>
                                                 <ul class="list-inline">
-                                                    <li><a href="#" class="text-black">مهران</a></li>
+                                                    <li><a href="{% url 'blog:author' object.author.username %}" class="text-black">{{object.author.get_full_name}}</a></li>
                                                     <li><a href="#" class="text-black">{{ object.jpublish }}</a></li>
                                                     <li><a href="#" class="text-black">2 comments</a></li>
                                                 </ul>

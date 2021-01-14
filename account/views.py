@@ -8,8 +8,13 @@ from .forms import MyAuthForm
 # Create your views here.
 
 class ArticleList(LoginRequiredMixin,ListView):
-    queryset = Article.objects.all()
     template_name = 'registration/home.html'
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Article.objects.all()
+        else:
+            return Article.objects.filter(author=self.request.user)
+
 
 
 class Login(LoginView):
@@ -17,8 +22,8 @@ class Login(LoginView):
 
     def get_success_url(self):
         user = self.request.user
-        if user.is_superuser or user.is_author:
+        if user.is_superuser:
             return reverse_lazy("account:home")
         else:
-            pass
+            return reverse_lazy("account:home")
 

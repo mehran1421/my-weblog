@@ -1,0 +1,39 @@
+{% extends 'registration/base_login.html' %}
+{% load widget_tweaks %}
+
+{% block title %}
+    صفحه ورود
+{% endblock %}
+
+{% block work %}
+    ورود کاربران
+{% endblock %}
+
+
+
+{% block form_work %}
+    <form method="post" class="login100-form validate-form p-b-33 p-t-5">
+        {% csrf_token %}
+        <div>
+            {% for error in form.error_messages.invalid_login %}
+                <span style="color: red">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div class="wrap-input100 validate-input" data-validate="Enter username">
+            {{ form.username|add_class:"input100" }}
+            <span class="focus-input100" data-placeholder="&#xe82a;"></span>
+        </div>
+
+        <div class="wrap-input100 validate-input" data-validate="Enter password">
+            {{ form.password |add_class:"input100" }}
+            <span class="focus-input100" data-placeholder="&#xe80f;"></span>
+        </div>
+
+        <div class="container-login100-form-btn m-t-32">
+            <button type="submit" class="login100-form-btn">
+                ورود
+            </button>
+        </div>
+
+    </form>
+{% endblock %}

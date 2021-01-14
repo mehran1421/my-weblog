@@ -1,4 +1,5 @@
 {% extends 'registration/base.html' %}
+
 {% load crispy_forms_tags %}
 
 {% block title %}{% block title-meta %}
@@ -13,6 +14,7 @@
             </div>
             <div class="card-body">
                 <form method="post" enctype="multipart/form-data">{% csrf_token %}
+                {{ form.media }}
                     <div class="row">
                         <div class="col-6">
                             {{ form.title|as_crispy_field }}
@@ -21,7 +23,7 @@
                             {{ form.slug|as_crispy_field }}
                         </div>
                         <div class="col-12">
-                            {{ form.description|as_crispy_field }}
+                            {{ form.description }}
                         </div>
                         <div class="col-6">
                             {{ form.category|as_crispy_field }}

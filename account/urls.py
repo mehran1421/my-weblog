@@ -1,8 +1,7 @@
 from django.urls import path
-from .views import ArticleList,Login
+from .views import ArticleList,Login,ArticleCreate
 
-app_name='account'
-urlpatterns = [
+
     # path('logout/', views.LogoutView.as_view(), name='logout'),
     #
     # path('password_change/', views.PasswordChangeView.as_view(), name='password_change'),
@@ -12,9 +11,10 @@ urlpatterns = [
     # path('password_reset/done/', views.PasswordResetDoneView.as_view(), name='password_reset_done'),
     # path('reset/<uidb64>/<token>/', views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     # path('reset/done/', views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
-]
 
-urlpatterns +=[
+app_name='account'
+urlpatterns =[
     path('',ArticleList.as_view(),name='home'),
     path('login/',Login.as_view(),name='login'),
+    path('article/create', ArticleCreate.as_view(), name="article-create"),
 ]

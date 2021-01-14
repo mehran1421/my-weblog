@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'extension',
     'ckeditor',
     'widget_tweaks',
+    'crispy_forms',
 ]
 
 MIDDLEWARE = [
@@ -138,3 +139,5 @@ CKEDITOR_CONFIGS = {
         'toolbar': 'full',
     },
 }
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'

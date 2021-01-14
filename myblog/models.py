@@ -2,6 +2,7 @@ import os
 import random
 from django.db import models
 from django.utils import timezone
+from django.urls import reverse
 from .utils import unique_slug_generator
 from django.utils.html import format_html
 from django.contrib.auth.models import User
@@ -117,6 +118,9 @@ class Article(models.Model):
         return ", ".join([cat.title for cat in self.category_published()])
 
     category_to_string.short_description = "دسته بندی"
+
+    def get_absolute_url(self):
+        return reverse("account:home")
 
     def thumbnail_tag(self):
         return format_html("<img width=100 src='{}'>".format(self.thumbnail.url))

@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.urls import reverse
 from .utils import unique_slug_generator
 from django.utils.html import format_html
-from django.contrib.auth.models import User
+from account.models import User
 from extension.utils import jalaly_converter
 from django.db.models.signals import pre_save
 from django.template.defaultfilters import slugify

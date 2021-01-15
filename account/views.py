@@ -5,7 +5,6 @@ from django.contrib.auth.views import LoginView
 from myblog.models import Article
 from .forms import MyAuthForm
 
-
 # Create your views here.
 
 class ArticleList(LoginRequiredMixin, ListView):
@@ -22,7 +21,6 @@ class ArticleCreate(CreateView):
     model = Article
     template_name = "registration/article-create-update.html"
     fields = ['title', 'slug', 'category', 'author', 'description', 'thumbnail', 'publish', 'status']
-
 
 
 class Login(LoginView):

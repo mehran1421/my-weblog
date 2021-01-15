@@ -2,6 +2,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, CreateView
 from django.urls import reverse_lazy
 from django.contrib.auth.views import LoginView
+from .mixins import FieldsMixin,FormValidMixin
 from myblog.models import Article
 from .forms import MyAuthForm
 
@@ -17,10 +18,10 @@ class ArticleList(LoginRequiredMixin, ListView):
             return Article.objects.filter(author=self.request.user)
 
 
-class ArticleCreate(CreateView):
+class ArticleCreate(FormValidMixin,FieldsMixin,LoginRequiredMixin,CreateView):
     model = Article
     template_name = "registration/article-create-update.html"
-    fields = ['title', 'slug', 'category', 'author', 'description', 'thumbnail', 'publish', 'status']
+
 
 
 class Login(LoginView):

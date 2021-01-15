@@ -48,3 +48,10 @@ class AuthorsAccessMixin():
 		else:
 			return redirect("login")
 
+class SuperUserAccessMixin():
+    def dispatch(self,request,*args,**kwargs):
+        if request.user.is_superuser:
+            return super().dispatch(request,*args,**kwargs)
+        else:
+            raise Http404
+

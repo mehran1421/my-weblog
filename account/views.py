@@ -1,10 +1,10 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, CreateView,UpdateView
 from django.urls import reverse_lazy
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView,LogoutView
 from .mixins import FieldsMixin,FormValidMixin,AuthorAccessMixin,AuthorsAccessMixin
 from myblog.models import Article
-from .forms import MyAuthForm
+
 
 # Create your views here.
 
@@ -29,11 +29,14 @@ class ArticleUpdate(AuthorAccessMixin,FormValidMixin, FieldsMixin, UpdateView):
 
 
 class Login(LoginView):
-    authentication_form = MyAuthForm
-
     def get_success_url(self):
         user = self.request.user
         if user.is_superuser:
             return reverse_lazy("account:home")
         else:
             return reverse_lazy("account:home")
+
+
+class LogOut(LogoutView):
+    pass
+

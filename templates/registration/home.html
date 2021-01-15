@@ -37,14 +37,17 @@
                                     <td><img src="{{ article.thumbnail.url }}" width="120"></td>
                                     <td>{{ article.category_to_string }}</td>
                                     <td>{{ article.author.get_full_name }}</td>
-                                    <td>{{ article.description|striptags|safe|truncatewords:"30" }}</td>
+                                    <td>{{ article.description|striptags|safe|truncatewords:"10" }}</td>
                                     <td>{{ article.jpublish }}</td>
                                     <td>
                                         {% if article.status == "p" %}
                                             <span class="badge badge-success">منتشر شده</span>
-                                            <a href="{% url 'blog:detail' article.slug %}">نمایش سایت</a>
+                                            <span class="badge badge-dark"> <a href="{% url 'blog:detail' article.slug %}" style="color: white">نمایش سایت</a></span>
                                         {% else %}
                                             <span class="badge badge-danger">پیش نویس</span>
+                                        {% endif %}
+                                        {% if user.is_superuser %}
+                                            <span class="badge badge-pill"><a href="{% url 'account:article-delete' article.pk %}"style="color: red">حذف</a></span>
                                         {% endif %}
                                     </td>
                                 </tr>

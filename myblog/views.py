@@ -3,6 +3,7 @@ from .models import Article,Category
 from django.views.generic import ListView
 from django.shortcuts import get_object_or_404
 from account.models import User
+from account.mixins import AuthorAccessMixin
 
 # Create your views here.
 
@@ -23,6 +24,20 @@ class ArticleDetail(ListView):
         context=super().get_context_data(**kwargs)
         context['object']=get_object_or_404(article,slug=slug)
         context['res_articles']=article[:5]
+        return context
+
+
+class ArticlePreview(AuthorAccessMixin,ListView):
+    template_name="blog/article_detail.html"
+    def get_queryset(self):
+        global pk,article
+        pk=self.kwargs.get('pk')
+        article=Article.objects.all()
+        return article
+
+    def get_context_data(self,**kwargs):
+        context=super().get_context_data(**kwargs)
+        context['object']=get_object_or_404(article,pk=pk)
         return context
 
 

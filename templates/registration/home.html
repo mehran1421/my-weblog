@@ -42,9 +42,10 @@
                                     <td>
                                         {% if article.status == "p" %}
                                             <span class="badge badge-success">منتشر شده</span>
-                                            <span class="badge badge-dark"> <a href="{% url 'blog:detail' article.slug %}" style="color: white">نمایش سایت</a></span>
+                                            <span class="badge badge-dark"> <a href="{% url 'blog:detail' article.slug %}" style="color: white">نمایش</a></span>
                                         {% else %}
                                             <span class="badge badge-danger">پیش نویس</span>
+                                            <span class="badge badge-secondary"> <a href="{% url 'blog:preview' article.pk %}" style="color: white">پیش نمایش</a></span>
                                         {% endif %}
                                         {% if user.is_superuser %}
                                             <span class="badge badge-pill"><a href="{% url 'account:article-delete' article.pk %}"style="color: red">حذف</a></span>

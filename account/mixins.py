@@ -6,7 +6,7 @@ class FieldsMixin():
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_superuser:
             self.fields = [
-                'title', 'slug', 'category', 'author', 'description', 'thumbnail', 'publish', 'status','whyback'
+                'title', 'slug', 'category', 'author', 'description', 'thumbnail', 'publish','is_special','status','whyback'
             ]
         elif request.user.is_author:
             self.fields = [

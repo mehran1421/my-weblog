@@ -95,6 +95,7 @@ class Article(models.Model):
     created = models.DateTimeField(auto_now_add=True, verbose_name="ساخته ")
     whyback=models.CharField(null=True,max_length=200,verbose_name='دلیل برگشت مقاله')
     updated = models.DateTimeField(auto_now=True, verbose_name="آپدیت")
+    is_special = models.BooleanField(default=False, verbose_name="آیا مقاله ی ویژه باشد؟")
     status = models.CharField(max_length=1, choices=Status_Choise, verbose_name="وضعیت")
 
     class Meta:

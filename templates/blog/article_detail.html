@@ -25,14 +25,24 @@
                                             <div class="head_text">
                                                 <h2>{{ object.title }}</h2>
                                                 <ul class="list-inline">
-                                                    <li><a href="{% url 'blog:author' object.author.username %}" class="text-black">{{object.author.get_full_name}}</a></li>
+                                                    <li><a href="{% url 'blog:author' object.author.username %}"
+                                                           class="text-black">{{ object.author.get_full_name }}</a></li>
                                                     <li><h5 class="text-black">{{ object.jpublish }}</h5></li>
-                                                    <li><a href="#" class="text-black">2 comments</a></li>
                                                 </ul>
                                             </div>
                                         </div>
                                         <div class="blog_details_figure m-top-40">
-                                            <p>{{ object.description|safe }}</p>
+                                            {% if object.is_special %}
+                                                {% if user.is_authenticated and user.is_special or user == object.author or user.is_superuser %}
+                                                    {{ object.description|safe }}
+                                                {% else %}
+                                                    {{ object.description|truncatewords:"50"|safe }}
+                                                    <p>این مقاله ویژه است و برای مشاهده آن باید <a href="#">اشتراک
+                                                        ویژه</a> تهیه نمایید </p>
+                                                {% endif %}
+                                            {% else %}
+                                                <p>{{ object.description|safe }}</p>
+                                            {% endif %}
                                         </div>
 
 

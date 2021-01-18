@@ -45,7 +45,7 @@ class WhyBackArticle(BackAccessMixin,TemplateView):
         return render(request,'registration/whyback.html',context)
 
 
-class Profile(UpdateView):
+class Profile(LoginRequiredMixin,UpdateView):
     model = User
     form_class = ProfileForm
     template_name = "registration/profile.html"
@@ -68,7 +68,7 @@ class Login(LoginView):
         if user.is_superuser:
             return reverse_lazy("account:home")
         else:
-            return reverse_lazy("account:home")
+            return reverse_lazy("account:profile")
 
 
 class LogOut(LogoutView):

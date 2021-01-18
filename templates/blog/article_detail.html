@@ -28,6 +28,10 @@
                                                     <li><a href="{% url 'blog:author' object.author.username %}"
                                                            class="text-black">{{ object.author.get_full_name }}</a></li>
                                                     <li><h5 class="text-black">{{ object.jpublish }}</h5></li>
+                                                    {% if object.is_special %}
+                                                        <span class="badge"
+                                                              style="background-color: red">مقاله ویژه</span>
+                                                    {% endif %}
                                                 </ul>
                                             </div>
                                         </div>
@@ -37,7 +41,7 @@
                                                     {{ object.description|safe }}
                                                 {% else %}
                                                     {{ object.description|truncatewords:"50"|safe }}
-                                                    <p>این مقاله ویژه است و برای مشاهده آن باید <a href="#">اشتراک
+                                                    <p class="alert alert-warning">این مقاله ویژه است و برای مشاهده آن باید <a href="#">اشتراک
                                                         ویژه</a> تهیه نمایید </p>
                                                 {% endif %}
                                             {% else %}
@@ -171,6 +175,9 @@
                                             </div>
                                             <div class="item_text">
                                                 <a href="{% url 'blog:detail' a.slug %}"><h6>{{ a.title }}</h6></a>
+                                                {% if a.is_special %}
+                                                    <span class="badge" style="background-color: red">مقاله ویژه</span>
+                                                {% endif %}
                                                 <p><i class="fa fa-clock-o"></i> {{ a.jpublish }}</p>
                                             </div>
                                         </div>

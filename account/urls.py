@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import Login,LogOut,ArticleList,ArticleCreate,ArticleUpdate,ArticleDelete
+from .views import Login,LogOut,ArticleList,ArticleCreate,ArticleUpdate,ArticleDelete,WhyBackArticle
 
 
     # path('logout/', views.LogoutView.as_view(), name='logout'),
@@ -19,5 +19,6 @@ urlpatterns =[
     path('logout/',LogOut.as_view(),name='logout'),
     path('article/create', ArticleCreate.as_view(), name="article-create"),
     path('article/update/<int:pk>', ArticleUpdate.as_view(), name="article-update"),
+    path('article/back/<int:pk>', WhyBackArticle.as_view(), name="article-back"),
     path('article/delete/<int:pk>', ArticleDelete.as_view(), name="article-delete"),
 ]

@@ -81,7 +81,9 @@ class Owner(models.Model):
 class Article(models.Model):
     Status_Choise = (
         ('d', 'پیشنویس'),
-        ('p', 'منتشرشده')
+        ('p', 'منتشرشده'),
+        ('i', 'درحال بررسی'),
+        ('b', 'برگشت داده شده'),
     )
     title = models.CharField(max_length=200, verbose_name="تایتل")
     slug = models.SlugField(blank=True, allow_unicode=True, verbose_name="عنوان")
@@ -91,6 +93,7 @@ class Article(models.Model):
     thumbnail = models.ImageField(upload_to=upload_image_path, verbose_name="عکس")
     publish = models.DateTimeField(default=timezone.now, verbose_name="زمان")
     created = models.DateTimeField(auto_now_add=True, verbose_name="ساخته ")
+    whyback=models.CharField(null=True,max_length=200,verbose_name='دلیل برگشت مقاله')
     updated = models.DateTimeField(auto_now=True, verbose_name="آپدیت")
     status = models.CharField(max_length=1, choices=Status_Choise, verbose_name="وضعیت")
 

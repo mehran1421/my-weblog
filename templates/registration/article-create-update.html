@@ -40,6 +40,9 @@
                             <div class="col-6">
                                 {{ form.status|as_crispy_field }}
                             </div>
+                            <div class="col-6">
+                                {{ form.whyback|as_crispy_field }}
+                            </div>
                         {% else %}
                             <div class="col-6">
                                 <div id="div_id_status" class="form-group">
@@ -59,7 +62,8 @@
                     </div>
                     <button class="btn btn-success">ارسال مقاله</button>
                     {% if user.is_superuser and request.resolver_match.kwargs.pk %}
-                        <a href="{% url 'account:article-delete' request.resolver_match.kwargs.pk %}" class="btn btn-danger">حذف</a>
+                        <a href="{% url 'account:article-delete' request.resolver_match.kwargs.pk %}"
+                           class="btn btn-danger">حذف</a>
                     {% endif %}
                 </form>
             </div>

@@ -1,8 +1,9 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, CreateView,UpdateView,DeleteView
+from django.views.generic import ListView, CreateView,UpdateView,DeleteView,TemplateView
 from django.urls import reverse_lazy
+from django.shortcuts import render
 from django.contrib.auth.views import LoginView,LogoutView
-from .mixins import FieldsMixin,FormValidMixin,AuthorAccessMixin,AuthorsAccessMixin,SuperUserAccessMixin
+from .mixins import FieldsMixin,FormValidMixin,BackAccessMixin,AuthorAccessMixin,AuthorsAccessMixin,SuperUserAccessMixin
 from myblog.models import Article
 
 
@@ -31,6 +32,15 @@ class ArticleDelete(SuperUserAccessMixin,DeleteView):
     model = Article
     template_name = 'registration/article_confirm_delete.html'
     success_url = reverse_lazy('account:home')
+
+class WhyBackArticle(BackAccessMixin,TemplateView):
+    def get(self,request,*args,**kwargs):
+        article=Article.objects.filter(pk=self.kwargs['pk']).first()
+        context={
+            'why':article
+        }
+        return render(request,'registration/whyback.html',context)
+
 
 
 class Login(LoginView):

@@ -17,11 +17,10 @@
                     </div>
                     <div class="blog_fashion_content">
                         <ol class="breadcrumb">
-                            <li><a href="#" class="text-black">مهران</a></li>
-                            <li><a href="#" class="text-black">{{ latest.jpublish }}</a></li>
-                            <li><a href="#" class="text-black">2 comments</a></li>
+                            <li><a href="{% url 'blog:author' latest.author.username %}" class="text-black">{{ latest.author.get_full_name }}</a></li>
+                            <li><a href="{% url 'blog:author' latest.author.username %}" class="text-black">{{ latest.jpublish }}</a></li>
                         </ol>
-                        <a href="article_detail.html"><h2>{{ latest.title }}</h2></a>
+                        <h2>{{ latest.title }}</h2>
                         <p>{{ latest.description|truncatewords:70 |safe }}</p>
 
 
@@ -58,7 +57,7 @@
                         </div>
                         <ol class="breadcrumb">
                             <li><a href="{% url 'blog:author' article.author.username %}" class="text-black">{{article.author.get_full_name}}</a></li>
-                            <li><a href="#" class="text-black">{{ article.jpublish }}</a></li>
+                            <li><a href="{% url 'blog:author' article.author.username %}" class="text-black">{{ article.jpublish }}</a></li>
                         </ol>
                         <a href="{% url 'blog:detail' article.slug %}"><h5>{{ article.title }}</h5></a>
                         <p class="m-top-20">{{ article.description|truncatewords:20|safe }}</p>

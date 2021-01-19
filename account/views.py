@@ -1,10 +1,21 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, CreateView,UpdateView,DeleteView,TemplateView
+from django.views.generic import (ListView,
+                                  CreateView,
+                                  UpdateView,
+                                  DeleteView,
+                                  TemplateView)
+
 from django.urls import reverse_lazy
 from django.shortcuts import render
 from .forms import ProfileForm
-from django.contrib.auth.views import LoginView,LogoutView
-from .mixins import FieldsMixin,FormValidMixin,BackAccessMixin,AuthorAccessMixin,AuthorsAccessMixin,SuperUserAccessMixin
+from django.contrib.auth.views import LoginView
+from .mixins import (FieldsMixin,
+                     FormValidMixin,
+                     BackAccessMixin,
+                     AuthorAccessMixin,
+                     AuthorsAccessMixin,
+                     SuperUserAccessMixin)
+
 from myblog.models import Article
 from .models import User
 
@@ -69,8 +80,3 @@ class Login(LoginView):
             return reverse_lazy("account:home")
         else:
             return reverse_lazy("account:profile")
-
-
-class LogOut(LogoutView):
-    pass
-

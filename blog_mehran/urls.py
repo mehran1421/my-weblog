@@ -16,11 +16,14 @@ Including another URLconf
 from django.contrib import admin
 from django.conf.urls.static import static
 from django.urls import path, include
+from account.views import Login
 from blog_mehran import settings
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('', include('myblog.urls')),
+    path('admin/', admin.site.urls),
+    path('', include('django.contrib.auth.urls')),
+    path('login/', Login.as_view(), name='login'),
     path('account/', include('account.urls')),
     path('ckeditor/', include('ckeditor_uploader.urls')),
 ]

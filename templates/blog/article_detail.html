@@ -1,5 +1,7 @@
 {% extends 'blog/base.html' %}
 {% load base_tags %}
+{% load comment_tags %}
+
 
 <div class="culmn">
     <!--Home Sections-->
@@ -41,8 +43,9 @@
                                                     {{ object.description|safe }}
                                                 {% else %}
                                                     {{ object.description|truncatewords:"50"|safe }}
-                                                    <p class="alert alert-warning">این مقاله ویژه است و برای مشاهده آن باید <a href="#">اشتراک
-                                                        ویژه</a> تهیه نمایید </p>
+                                                    <p class="alert alert-warning">این مقاله ویژه است و برای مشاهده آن
+                                                        باید <a href="#">اشتراک
+                                                            ویژه</a> تهیه نمایید </p>
                                                 {% endif %}
                                             {% else %}
                                                 <p>{{ object.description|safe }}</p>
@@ -67,40 +70,8 @@
                             <hr/>
 
                             <div class="blog_comments">
-                                <h4 class="m-bottom-30">Comment</h4>
                                 {% block comment %}
-                                    <div class="row">
-                                        <div class="comment_item">
-                                            <div class="col-sm-2">
-                                                <div class="blog_comments_img">
-                                                    <img class="img-circle" src="assets/images/comment-img1.jpg" alt="">
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <div class="comments_top_tex">
-                                                    <div class="row">
-                                                        <div class="col-sm-8 pull-left">
-                                                            <h5 class="text-uppercase">laingockien</h5>
-                                                            <small><em>Posted in Feb 29th 2016 at 16:50</em></small>
-                                                        </div>
-                                                        <div class="col-sm-2 pull-right">
-                                                            <a href="#"><i class="fa fa-mail-reply-all"></i> Reply</a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <article class="comments_bottom_text m-top-10">
-                                                    <p>Claritas est etiam processus dynamicus, qui sequitur mutationem
-                                                        consuetudium lectorum.
-                                                        Mirum est notare quam littera gothica, quam nunc putamus parum
-                                                        claram,
-                                                        anteposuerit
-                                                        litterarum formas</p>
-                                                </article>
-
-                                            </div>
-                                        </div>
-                                    </div>
+                                    {% render_comments object request %}
                                 {% endblock %}
                                 <hr/>
 

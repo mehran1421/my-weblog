@@ -10,6 +10,8 @@ from extension.utils import jalaly_converter
 from django.db.models.signals import pre_save
 from django.template.defaultfilters import slugify
 from ckeditor_uploader.fields import RichTextUploadingField
+from django.contrib.contenttypes.fields import GenericRelation
+from comment.models import Comment
 
 # Create your models here.
 
@@ -97,6 +99,7 @@ class Article(models.Model):
     updated = models.DateTimeField(auto_now=True, verbose_name="آپدیت")
     is_special = models.BooleanField(default=False, verbose_name="آیا مقاله ی ویژه باشد؟")
     status = models.CharField(max_length=1, choices=Status_Choise, verbose_name="وضعیت")
+    comments = GenericRelation(Comment)
 
     class Meta:
         verbose_name = "مقاله"

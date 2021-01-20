@@ -5,17 +5,15 @@ from django.utils.translation import ugettext_lazy as _
 
 
 class RegisterForm(UserCreationForm):
-    password1 = forms.CharField(label='Password', widget=forms.PasswordInput())
-    password2 = forms.CharField(label='Password confirmation', widget=forms.PasswordInput())
+    password1 = forms.CharField(label='گذرواژه', widget=forms.PasswordInput())
+    password2 = forms.CharField(label='تایید گذرواژه', widget=forms.PasswordInput())
 
     class Meta:
         model =User
-        fields = ('username','email','first_name','last_name')
+        fields = ('username','email')
         labels = {
             'username': _('نام کاربری'),
             'email': _('ایمل'),
-            'first_name': _('نام'),
-            'last_name': _('فامیلی'),
         }
         help_texts = {
             'username': _('لطفا نام کاربری خودتان را وارد کنید'),
@@ -45,6 +43,7 @@ class RegisterForm(UserCreationForm):
         except User.DoesNotExist:
             return email
         raise forms.ValidationError("این ایمیل قبلا توسط شخص دیگری استفاده شده است")
+
 
 class ProfileForm(forms.ModelForm):
     def __init__(self,*args,**kwargs):

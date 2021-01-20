@@ -10,17 +10,21 @@
         {% csrf_token %}
         <div class="wrap-input100 validate-input" data-validate="Enter username">
             {{ form.username|add_class:"input100" }}
-            <span class="focus-input100" data-placeholder="&#xe82a;"></span>
+            <span class="focus-input100" style="text-align: left !important;" data-placeholder="نام کاربری  &#xe82a;"></span>
         </div>
 
         <div class="wrap-input100 validate-input" data-validate="Enter password">
             {{ form.password |add_class:"input100" }}
-            <span class="focus-input100" data-placeholder="&#xe80f;"></span>
+            <span class="focus-input100" style="text-align: left !important;" data-placeholder="گذرواژه  &#xe80f;"></span>
         </div>
         <br/>
-        <div>
-            <a class="align-text-bottom"  href="{% url 'password_reset' %}">فراموشی رمز عبور</a>
+        <div class="alert alert-danger">
+            <a  href="{% url 'password_reset' %}">فراموشی رمز عبور</a>
         </div>
+        <div class="alert alert-success">
+            <a  href="{% url 'register' %}">ثبت نام در سایت</a>
+        </div>
+
         <div class="container-login100-form-btn m-t-32">
             <button type="submit" class="login100-form-btn">
                 ورود

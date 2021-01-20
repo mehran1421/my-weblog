@@ -37,7 +37,7 @@ body {
     margin-right: 0;
     font-weight: 400;
     width:100%;
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Sahel';
 }
 
 /*------------------------------------------------------------------*/
@@ -220,7 +220,7 @@ h4,
 h5,
 h6 {
     margin: 0;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Sahel';
     color:#1a1a1a;
     margin-bottom: 10px;
 }
@@ -243,7 +243,7 @@ h4 {
 }
 h5 {
     font-size: 18px;
-    font-family: 'Crimson Text', serif;
+    font-family: 'Sahel';
     font-weight: 400;
 }
 h6 {
@@ -752,13 +752,13 @@ textarea::-ms-input-placeholder{
     overflow: hidden;
 }
 .head_title h2{
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'Sahel';
     font-weight: 600;
     font-size:2.286rem;
     color:#1a1a1a;
 }
 .head_title p{
-    font-family: 'Raleway', sans-serif;
+    font-family: 'Sahel';
     font-weight: 400;
     font-size:1rem;
     color:#4a4a4a;
@@ -943,14 +943,14 @@ Home Section style
     z-index: 1;
 }
 .home_text h1{
-    font-family: 'Raleway', sans-serif;
+    font-family: 'Sahel';
     font-size:4.286rem;
     font-weight: 700;
     line-height: 6.5rem;
 }
 
 .home_text h5{
-    font-family: 'Crimson Text', serif;
+    font-family: 'Sahel';
     font-size:18px;
     font-weight: 400;
     width:70%;
@@ -985,7 +985,7 @@ About section style
 
 
 .counter_item h2{
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Sahel';
     font-size:60px;
     font-style: italic;
 
@@ -1049,7 +1049,7 @@ About section style
     border: none;
     border-radius: 0px;
     color: #000;
-    font-family: sans-serif;
+    font-family: 'Sahel';
     font-size: 14px;
     outline: none;
     border-bottom: 1px dotted #333;
@@ -1185,7 +1185,7 @@ service section style
 
 .service_right_text p,
 .service_left_text p{
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Sahel';
     font-size:14px;
     font-weight: 400;
 }
@@ -1205,7 +1205,7 @@ Testimonial Section style
 
 .main_testimonial .testimonial_item h6{
     font-size:16px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Sahel';
     font-weight: 400;
     margin-bottom: 10px;
 }
@@ -1790,7 +1790,7 @@ Blog Details Page
 .said_arc h6,
 .said_post h6,
 .said_ctg h6{
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Sahel';
     font-weight: 700;
     font-size:16px;
 }

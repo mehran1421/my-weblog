@@ -1,6 +1,7 @@
 {% extends 'blog/list.html' %}
 {% load static %}
 {% load base_tags %}
+{% load ratings %}
 
 
 {% block title %}
@@ -16,6 +17,7 @@
                         <img src="{{ latest.thumbnail.url }}" alt=""/>
                     </div>
                     <div class="blog_fashion_content">
+                        <div>{% ratings latest %}</div>
                         <ol class="breadcrumb">
                             <li><a href="{% url 'blog:author' latest.author.username %}"
                                    class="text-black">{{ latest.author.get_full_name }}</a></li>
@@ -24,6 +26,7 @@
                             {% if latest.is_special %}
                                 <span class="badge" style="background-color: red">مقاله ویژه</span>
                             {% endif %}
+
                         </ol>
                         <h2>{{ latest.title }}</h2>
                         <p>{{ latest.description|truncatewords:70 |safe }}</p>
@@ -67,6 +70,7 @@
                                 <span class="badge" style="background-color: red">مقاله ویژه</span>
                             {% endif %}
                         </ol>
+                        <div>{% ratings article %}</div>
                         <a href="{% url 'blog:detail' article.slug %}"><h5>{{ article.title }}</h5></a>
 
                         <p class="m-top-20">{{ article.description|truncatewords:20|safe }}</p>

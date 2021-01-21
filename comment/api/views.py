@@ -1,38 +1,47 @@
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import generics, permissions, status
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from comment.validators import ValidatorMixin, ContentTypeValidator
 from comment.api.serializers import CommentSerializer, CommentCreateSerializer
 from comment.api.permissions import (
-    IsOwnerOrReadOnly, ContentTypePermission, ParentIdPermission, FlagEnabledPermission, CanChangeFlaggedCommentState
+    IsOwnerOrReadOnly, FlagEnabledPermission, CanChangeFlaggedCommentState
 )
 from comment.models import Comment, Reaction, ReactionInstance, Flag, FlagInstance
+from comment.utils import get_comment_from_key, CommentFailReason
+from comment.messages import FlagError, EmailError
 
 
-class CommentCreate(generics.CreateAPIView):
+class CommentCreate(ValidatorMixin, generics.CreateAPIView):
     serializer_class = CommentCreateSerializer
-    permission_classes = (permissions.IsAuthenticated, ContentTypePermission, ParentIdPermission)
+    permission_classes = ()
+    api = True
 
     def get_serializer_context(self):
+        self.validate(self.request)
         context = super().get_serializer_context()
         context['user'] = self.request.user
-        context['model_type'] = self.request.GET.get("type")
-        context['model_id'] = self.request.GET.get("id")
-        context['parent_id'] = self.request.GET.get("parent_id")
+        context['model_name'] = self.model_name
+        context['app_name'] = self.app_name
+        context['model_id'] = self.model_id
+        context['parent_id'] = self.parent_id
+        context['email'] = self.request.GET.get('email', None)
         return context
 
 
-class CommentList(generics.ListAPIView):
+class CommentList(ContentTypeValidator, generics.ListAPIView):
     serializer_class = CommentSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, ContentTypePermission)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    api = True
 
     def get_queryset(self):
-        model_type = self.request.GET.get("type")
-        pk = self.request.GET.get("id")
-        content_type_model = ContentType.objects.get(model=model_type.lower())
+        self.validate(self.request)
+        model_name = self.model_name
+        pk = self.model_id
+        content_type_model = ContentType.objects.get(model=model_name.lower())
         model_class = content_type_model.model_class()
         model_obj = model_class.objects.filter(id=pk).first()
         return Comment.objects.filter_parents_by_object(model_obj)
@@ -65,7 +74,7 @@ class CommentDetailForReaction(generics.RetrieveAPIView):
                 reaction_type=reaction_type
             )
         except ValidationError as e:
-            return Response({'error': e.messages}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': e.messages}, status=status.HTTP_400_BAD_REQUEST)
 
         comment.reaction.refresh_from_db()
         serializer = self.get_serializer(comment)
@@ -90,7 +99,7 @@ class CommentDetailForFlag(generics.RetrieveAPIView):
         try:
             FlagInstance.objects.set_flag(request.user, flag, reason=reason, info=info)
         except ValidationError as e:
-            return Response({'error': e.messages}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': e.messages}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = self.get_serializer(comment)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -110,18 +119,36 @@ class CommentDetailForFlagStateChange(generics.RetrieveAPIView):
         comment = get_object_or_404(Comment, id=kwargs.get('pk'))
         flag = Flag.objects.get_for_comment(comment)
         if not comment.is_flagged:
-            raise PermissionDenied(detail='You do not have permission to perform this action.')
+            return Response(
+                {'detail': FlagError.REJECT_UNFLAGGED_COMMENT},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         state = request.data.get('state') or request.POST.get('state')
         try:
             state = flag.get_clean_state(state)
             if not comment.is_edited and state == flag.RESOLVED:
                 return Response(
-                    {'error': 'The comment must be edited before resolving the flag'},
+                    {'detail': FlagError.RESOLVE_UNEDITED_COMMENT},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             flag.toggle_state(state, request.user)
         except ValidationError as e:
-            return Response({'error': e.messages}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': e.messages}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = self.get_serializer(comment)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ConfirmComment(APIView):
+    @staticmethod
+    def get(request, *args, **kwargs):
+        key = kwargs.get('key', None)
+        comment = get_comment_from_key(key)
+
+        if comment.why_invalid == CommentFailReason.BAD:
+            return Response({'detail': EmailError.BROKEN_VERIFICATION_LINK}, status=status.HTTP_400_BAD_REQUEST)
+
+        if comment.why_invalid == CommentFailReason.EXISTS:
+            return Response({'detail': EmailError.USED_VERIFICATION_LINK}, status=status.HTTP_200_OK)
+
+        return Response(CommentSerializer(comment.obj).data, status=status.HTTP_201_CREATED)

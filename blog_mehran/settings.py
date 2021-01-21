@@ -43,11 +43,12 @@ INSTALLED_APPS = [
     'account.apps.AccountConfig',
     'myblog.apps.MyblogConfig',
     'extension',
+    'crispy_forms',
+    'comment',
     'ckeditor',
     'widget_tweaks',
-    'crispy_forms',
     'django_gravatar',
-    'comment',
+
 ]
 
 MIDDLEWARE = [

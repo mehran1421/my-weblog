@@ -1,14 +1,12 @@
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models.signals import post_delete, post_save
-from django.dispatch import receiver
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
 
+from comment.conf import settings
 from comment.managers import FlagManager, FlagInstanceManager
 from comment.models import Comment
+from comment.messages import FlagError, FlagState
 
 
 User = get_user_model()
@@ -20,16 +18,21 @@ class Flag(models.Model):
     REJECTED = 3
     RESOLVED = 4
     STATES_CHOICES = [
-        (UNFLAGGED, 'Unflagged'),
-        (FLAGGED, 'Flagged'),
-        (REJECTED, 'Flag rejected by the moderator'),
-        (RESOLVED, 'Comment modified by the author'),
+        (UNFLAGGED, FlagState.UNFLAGGED),
+        (FLAGGED, FlagState.FLAGGED),
+        (REJECTED, FlagState.REJECTED),
+        (RESOLVED, FlagState.RESOLVED),
     ]
 
     comment = models.OneToOneField(Comment, on_delete=models.CASCADE)
     count = models.PositiveIntegerField(default=0)
     state = models.SmallIntegerField(choices=STATES_CHOICES, default=UNFLAGGED)
-    moderator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    moderator = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='flags_moderated'
+        )
 
     objects = FlagManager()
 
@@ -63,7 +66,7 @@ class Flag(models.Model):
         return bool(getattr(settings, 'COMMENT_FLAGS_ALLOWED', 0))
 
     def get_clean_state(self, state):
-        err = ValidationError(_('%(state)s is an invalid state'), code='invalid', params={'state': state})
+        err = ValidationError(FlagError.STATE_INVALID.format(state=state), code='invalid')
         try:
             state = int(state)
             if state not in [st[0] for st in self.STATES_CHOICES]:
@@ -76,7 +79,7 @@ class Flag(models.Model):
         state = self.get_clean_state(state)
         # toggle states occurs between rejected and resolved states only
         if state != self.REJECTED and state != self.RESOLVED:
-            raise ValidationError(_('%(state)s is an invalid state'), code='invalid', params={'state': state})
+            raise ValidationError(FlagError.STATE_INVALID.format(state=state), code='invalid')
         if self.state == state:
             self.state = self.FLAGGED
         else:
@@ -89,7 +92,7 @@ class Flag(models.Model):
         if not allowed_flags:
             return
         self.refresh_from_db()
-        if self.count > allowed_flags:
+        if self.count > allowed_flags and self.state not in [self.RESOLVED, self.REJECTED]:
             self.state = self.FLAGGED
             self.save()
         else:
@@ -98,7 +101,6 @@ class Flag(models.Model):
 
 
 class FlagInstance(models.Model):
-
     flag = models.ForeignKey(Flag, on_delete=models.CASCADE, related_name='flags')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='flags')
     info = models.TextField(null=True, blank=True)
@@ -110,23 +112,3 @@ class FlagInstance(models.Model):
     class Meta:
         unique_together = ('flag', 'user')
         ordering = ('date_flagged',)
-
-
-@receiver(post_save, sender=FlagInstance)
-def increase_count(sender, instance, created, raw, using, update_fields, **kwargs):
-    if created:
-        instance.flag.increase_count()
-        instance.flag.toggle_flagged_state()
-
-
-@receiver(post_delete, sender=FlagInstance)
-def decrease_count(sender, instance, using, **kwargs):
-    """Decrease flag count in the flag model before deleting an instance"""
-    instance.flag.decrease_count()
-    instance.flag.toggle_flagged_state()
-
-
-@receiver(post_save, sender=Comment)
-def add_flag(sender, instance, created, raw, using, update_fields, **kwargs):
-    if created:
-        Flag.objects.create(comment=instance)

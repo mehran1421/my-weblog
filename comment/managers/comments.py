@@ -1,6 +1,8 @@
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+
+from comment.conf import settings
+from comment.utils import id_generator
 
 
 class CommentManager(models.Manager):
@@ -28,19 +30,21 @@ class CommentManager(models.Manager):
             return self.all_comments_by_object(obj, include_flagged=True).filter(parent=None)
         return self.all_comments_by_object(obj).filter(parent=None)
 
-    def create_by_model_type(self, model_type, pk, content, user, parent_obj=None):
-        model_qs = ContentType.objects.filter(model=model_type)
-        if model_qs.exists():
-            model_class = model_qs.first().model_class()
-            obj_qs = model_class.objects.filter(id=pk)
-            if obj_qs.exists() and obj_qs.count() == 1:
-                instance = self.model()
-                instance.content = content
-                instance.user = user
-                instance.content_type = model_qs.first()
-                instance.object_id = obj_qs.first().id
-                if parent_obj:
-                    instance.parent = parent_obj
-                instance.save()
-                return instance
-        return None
+    @staticmethod
+    def generate_urlhash():
+        return id_generator(
+            prefix=settings.COMMENT_URL_PREFIX,
+            len_id=settings.COMMENT_URL_ID_LENGTH,
+            suffix=settings.COMMENT_URL_SUFFIX
+            )
+
+    def get_parent_comment(self, parent_id):
+        parent_comment = None
+        if parent_id or parent_id == '0':
+            parent_qs = self.filter(id=parent_id)
+            if parent_qs.exists():
+                parent_comment = parent_qs.first()
+        return parent_comment
+
+    def comment_exists(self, comment):
+        return self.model.objects.filter(email=comment.email, posted=comment.posted).count() > 0

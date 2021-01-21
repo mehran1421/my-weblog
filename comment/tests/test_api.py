@@ -1,34 +1,41 @@
 from time import sleep
 from unittest.mock import patch
 
-from django.conf import settings
 from django.test import RequestFactory
+from django.core import signing
+from rest_framework import status
 
-from comment.models import Comment
-from comment.api.serializers import get_profile_model, get_user_fields, UserSerializer, CommentCreateSerializer, \
+from comment.conf import settings
+from comment.models import Comment, FlagInstanceManager
+from comment.messages import ContentTypeError, EmailError
+from comment.api.serializers import get_profile_model, get_user_fields, UserSerializerDAB, CommentCreateSerializer, \
     CommentSerializer
 from comment.api.permissions import (
-    IsOwnerOrReadOnly, ContentTypePermission, ParentIdPermission, FlagEnabledPermission, CanChangeFlaggedCommentState
+    IsOwnerOrReadOnly, FlagEnabledPermission, CanChangeFlaggedCommentState
 )
 from comment.api.views import CommentList
-from comment.tests.base import BaseCommentTest
+from comment.tests.base import BaseCommentTest, timezone
+from comment.tests.test_utils import BaseAnonymousCommentTest
 
 
 class APIBaseTest(BaseCommentTest):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.comment_1 = cls.create_comment(cls.content_object_1)
+        cls.comment_2 = cls.create_comment(cls.content_object_1)
+        cls.comment_3 = cls.create_comment(cls.content_object_1)
+        cls.comment_4 = cls.create_comment(cls.content_object_1, parent=cls.comment_1)
+        cls.reaction_1 = cls.create_reaction_instance(cls.user_1, cls.comment_1, 'like')
+
+        cls.comment_5 = cls.create_comment(cls.content_object_2)
+        cls.comment_6 = cls.create_comment(cls.content_object_2)
+        cls.comment_7 = cls.create_comment(cls.content_object_2, parent=cls.comment_5)
+        cls.comment_8 = cls.create_comment(cls.content_object_2, parent=cls.comment_5)
+        cls.reaction_2 = cls.create_reaction_instance(cls.user_1, cls.comment_5, 'dislike')
+
     def setUp(self):
         super().setUp()
-        self.comment_1 = self.create_comment(self.content_object_1)
-        self.comment_2 = self.create_comment(self.content_object_1)
-        self.comment_3 = self.create_comment(self.content_object_1)
-        self.comment_4 = self.create_comment(self.content_object_1, parent=self.comment_1)
-        self.reaction_1 = self.create_reaction_instance(self.user_1, self.comment_1, 'like')
-
-        self.comment_5 = self.create_comment(self.content_object_2)
-        self.comment_6 = self.create_comment(self.content_object_2)
-        self.comment_7 = self.create_comment(self.content_object_2, parent=self.comment_5)
-        self.comment_8 = self.create_comment(self.content_object_2, parent=self.comment_5)
-        self.reaction_2 = self.create_reaction_instance(self.user_1, self.comment_5, 'dislike')
-
         self.addCleanup(patch.stopall)
 
 
@@ -36,12 +43,20 @@ class APIPermissionsTest(APIBaseTest):
     def setUp(self):
         super().setUp()
         self.owner_permission = IsOwnerOrReadOnly()
-        self.content_type_permission = ContentTypePermission()
-        self.parent_permission = ParentIdPermission()
         self.flag_enabled_permission = FlagEnabledPermission()
         self.can_change_flagged_comment_state = CanChangeFlaggedCommentState()
         self.factory = RequestFactory()
         self.view = CommentList()
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.flag_data = {
+            'reason': FlagInstanceManager.reason_values[0],
+            'info': '',
+        }
+        cls.create_flag_instance(cls.user_1, cls.comment_1, **cls.flag_data)
+        cls.create_flag_instance(cls.user_2, cls.comment_1, **cls.flag_data)
 
     def test_owner_permission(self):
         # self.client.login(username='test-2', password='1234')
@@ -67,69 +82,6 @@ class APIPermissionsTest(APIBaseTest):
         self.assertEqual(self.comment_1.user, self.user_1)
         self.assertTrue(self.owner_permission.has_object_permission(request, self.view, self.comment_1))
 
-    def test_content_type_permission(self):
-        # missing model type
-        request = self.factory.get('/api/comments/')
-        self.assertFalse(self.content_type_permission.has_permission(request, self.view))
-        self.assertEqual(self.content_type_permission.message, 'model type must be provided')
-
-        # missing model id
-        request = self.factory.get('/api/comments/?type=post')
-        self.assertFalse(self.content_type_permission.has_permission(request, self.view))
-        self.assertEqual(self.content_type_permission.message, 'model id must be provided')
-
-        # not exist model type
-        request = self.factory.get('/api/comments/?type=not_exist&id=1')
-        self.assertFalse(self.content_type_permission.has_permission(request, self.view))
-        self.assertEqual(self.content_type_permission.message, 'this is not a valid model type')
-
-        # not exist model id
-        request = self.factory.get('/api/comments/?type=post&id=100')
-        self.assertFalse(self.content_type_permission.has_permission(request, self.view))
-        self.assertEqual(self.content_type_permission.message, 'this is not a valid id for this model')
-
-        # not integer model id
-        request = self.factory.get('/api/comments/?type=post&id=c')
-        self.assertFalse(self.content_type_permission.has_permission(request, self.view))
-        self.assertEqual(self.content_type_permission.message, 'type id must be an integer')
-
-        # success
-        self.content_type_permission = ContentTypePermission()  # start fresh
-        request = self.factory.get('/api/comments/?type=post&id=1')
-        self.assertTrue(self.content_type_permission.has_permission(request, self.view))
-        self.assertEqual(self.content_type_permission.message, '')
-
-    def test_parent_id_permission(self):
-        # parent id not provided - user will be permitted and parent comment will be created
-        request = self.factory.get('/api/comments/create/?type=post&id=1')
-        self.assertTrue(self.parent_permission.has_permission(request, self.view))
-        self.assertEqual(self.parent_permission.message, '')
-
-        # parent id not int
-        request = self.factory.get('/api/comments/create/?type=post&id=1&parent_id=c')
-        self.assertFalse(self.parent_permission.has_permission(request, self.view))
-        self.assertEqual(self.parent_permission.message, 'the parent id must be an integer')
-
-        # parent id not exist
-        request = self.factory.get('/api/comments/create/?type=post&id=1&parent_id=100')
-        self.assertFalse(self.parent_permission.has_permission(request, self.view))
-        self.assertEqual(
-            self.parent_permission.message,
-            "this is not a valid id for a parent comment or the parent comment does NOT belong to this model object"
-        )
-
-        # parent id doesn't belong to the provided model type
-        request = self.factory.get('/api/comments/create/?type=post&id=2&parent_id=1')
-        self.assertFalse(self.parent_permission.has_permission(request, self.view))
-        self.assertEqual(
-            self.parent_permission.message,
-            "this is not a valid id for a parent comment or the parent comment does NOT belong to this model object"
-        )
-
-        # parent id = 0
-        request = self.factory.get('/api/comments/create/?type=post&id=2&parent_id=0')
-        self.assertTrue(self.parent_permission.has_permission(request, self.view))
-
     def test_flag_enabled_permission(self):
         request = self.factory.get('/')
         settings.COMMENT_FLAGS_ALLOWED = 0
@@ -139,117 +91,237 @@ class APIPermissionsTest(APIBaseTest):
 
     def test_can_change_flagged_comment_state(self):
         request = self.factory.get('/')
-        request.user = self.user_1  # not moderator user
+        user = self.user_1
+        request.user = user  # not moderator user
         self.assertFalse(self.can_change_flagged_comment_state.has_permission(request, self.view))
 
-        request.user = self.moderator
+        user = self.moderator
+        request.user = user
         self.assertTrue(self.can_change_flagged_comment_state.has_permission(request, self.view))
 
-        self.assertFalse(self.comment_1.is_flagged)
+        comment = self.comment_2
+        self.assertFalse(comment.is_flagged)
         self.assertFalse(
-            self.can_change_flagged_comment_state.has_object_permission(request, self.view, self.comment_1)
+            self.can_change_flagged_comment_state.has_object_permission(request, self.view, comment)
         )
-
-        flag_data = {
-            'reason': '1',
-            'info': None,
-        }
         settings.COMMENT_FLAGS_ALLOWED = 1
-        self.create_flag_instance(self.user_1, self.comment_1, **flag_data)
-        self.create_flag_instance(self.user_2, self.comment_1, **flag_data)
-        self.assertTrue(self.comment_1.is_flagged)
+        self.set_flag(self.user_1, comment, **self.flag_data)
+        self.set_flag(self.user_2, comment, **self.flag_data)
+        self.assertTrue(comment.is_flagged)
         self.assertTrue(
-            self.can_change_flagged_comment_state.has_object_permission(request, self.view, self.comment_1)
+            self.can_change_flagged_comment_state.has_object_permission(request, self.view, comment)
         )
 
         request.user = self.user_1
         self.assertFalse(
-            self.can_change_flagged_comment_state.has_object_permission(request, self.view, self.comment_1)
+            self.can_change_flagged_comment_state.has_object_permission(request, self.view, comment)
         )
 
 
 class APICommentViewsTest(APIBaseTest):
+    def setUp(self):
+        super().setUp()
+        self.url_data = {
+            'model_name': 'post',
+            'app_name': 'post',
+            'model_id': 1
+        }
+        self.comment_count = Comment.objects.filter_parents_by_object(self.post_1).count()
+        self.all_comments = Comment.objects.all().count()
+
+    @staticmethod
+    def get_url(base_url=None, **kwargs):
+        if not base_url:
+            base_url = '/api/comments/'
+        if kwargs:
+            base_url += '?'
+            for (key, val) in kwargs.items():
+                base_url += str(key) + '=' + str(val) + '&'
+        return base_url.rstrip('&')
+
+    def increase_count(self, parent=False):
+        if parent:
+            self.comment_count += 1
+        self.all_comments += 1
+
+    def comment_count_test(self):
+        self.assertEqual(Comment.objects.filter_parents_by_object(self.post_1).count(), self.comment_count)
+        self.assertEqual(Comment.objects.all().count(), self.all_comments)
+
     def test_can_retrieve_comments_list(self):
-        response = self.client.get('/api/comments/?type=post&id=1')
+        response = self.client.get(self.get_url(**self.url_data))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 3)  # 3 parent comment, child comment will be nested in the parent.
 
-    def test_retrieving_comment_list_fail(self):
-        # missing model type
-        response = self.client.get('/api/comments/')
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.data['detail'], 'model type must be provided')
+    def test_retrieving_comment_list_without_app_name(self):
+        data = self.url_data.copy()
+        data.pop('app_name')
+        url = self.get_url(**data)
 
-        # missing model id
-        response = self.client.get('/api/comments/?type=post')
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.data['detail'], 'model id must be provided')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['detail'], ContentTypeError.APP_NAME_MISSING)
+        self.assertTextTranslated(response.data['detail'], url)
 
+    def test_retrieving_comment_list_without_model_name(self):
+        data = self.url_data.copy()
+        data.pop('model_name')
+        url = self.get_url(**data)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['detail'], ContentTypeError.MODEL_NAME_MISSING)
+        self.assertTextTranslated(response.data['detail'], url)
+
+    def test_retrieving_comment_list_without_model_id(self):
+        url_data = self.url_data.copy()
+        url_data.pop('model_id')
+        url = self.get_url(**url_data)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['detail'], ContentTypeError.MODEL_ID_MISSING)
+        self.assertTextTranslated(response.data['detail'], url)
+
+    def test_retrieving_comment_list_with_invalid_app_name(self):
+        data = self.url_data.copy()
+        app_name = 'invalid'
+        data['app_name'] = app_name
+        url = self.get_url(**data)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['detail'], ContentTypeError.APP_NAME_INVALID.format(app_name=app_name))
+        self.assertTextTranslated(response.data['detail'], url)
+
+    def test_retrieving_comment_list_with_invalid_model_name(self):
         # not exist model type
-        response = self.client.get('/api/comments/?type=not_exist&id=1')
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.data['detail'], 'this is not a valid model type')
+        url_data = self.url_data.copy()
+        model_name = 'does_not_exists'
+        url_data['model_name'] = model_name
+        url = self.get_url(**url_data)
+        response = self.client.get(url)
 
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['detail'], ContentTypeError.MODEL_NAME_INVALID.format(model_name=model_name))
+        self.assertTextTranslated(response.data['detail'], url)
+
+    def test_retrieving_comment_list_with_invalid_model_id(self):
         # not exist model id
-        response = self.client.get('/api/comments/?type=post&id=100')
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.data['detail'], 'this is not a valid id for this model')
+        url_data = self.url_data.copy()
+        model_id = 100
+        url_data['model_id'] = model_id
+        url = self.get_url(**url_data)
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data['detail'],
+            ContentTypeError.MODEL_ID_INVALID.format(model_id=model_id, model_name=url_data["model_name"])
+        )
+        self.assertTextTranslated(response.data['detail'], url)
 
         # not integer model id
-        response = self.client.get('/api/comments/?type=post&id=c')
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.data['detail'], 'type id must be an integer')
+        model_id = 'c'
+        url_data['model_id'] = model_id
+        url = self.get_url(**url_data)
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data['detail'],
+            ContentTypeError.ID_NOT_INTEGER.format(var_name='model', id=model_id)
+        )
+        self.assertTextTranslated(response.data['detail'], url)
 
     def test_create_comment(self):
         # create parent comment
-        comments_count = Comment.objects.filter_parents_by_object(self.post_1).count()
-        all_comments = Comment.objects.all().count()
-        self.assertEqual(comments_count, 3)
-        self.assertEqual(all_comments, 8)
+        self.assertEqual(self.comment_count, 3)
+        self.assertEqual(self.all_comments, 8)
+
+        base_url = '/api/comments/create/'
         data = {'content': 'new parent comment from api'}
-        response = self.client.post('/api/comments/create/?type=post&id=1', data=data)
+        url_data = self.url_data.copy()
+
+        response = self.client.post(self.get_url(base_url, **url_data), data=data)
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(Comment.objects.filter_parents_by_object(self.post_1).count(), comments_count + 1)
-        self.assertEqual(Comment.objects.all().count(), all_comments + 1)
+        comment_id = response.json()['id']
+        # test email in database for authenticated user
+        self.assertEqual(Comment.objects.get(id=comment_id).email, response.wsgi_request.user.email)
+        self.increase_count(parent=True)
+        self.comment_count_test()
 
         # create child comment
+        url_data['parent_id'] = 1
         data = {'content': 'new child comment from api'}
-        response = self.client.post('/api/comments/create/?type=post&id=1&parent_id=1', data=data)
+
+        response = self.client.post(self.get_url(base_url, **url_data), data=data)
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(Comment.objects.filter_parents_by_object(self.post_1).count(), comments_count + 1)
-        self.assertEqual(Comment.objects.all().count(), all_comments + 2)
+        self.increase_count()
+        self.comment_count_test()
 
         # create comment with parent value = 0
+        url_data['parent_id'] = 0
         data = {'content': 'new comment from api'}
-        response = self.client.post('/api/comments/create/?type=post&id=1&parent_id=0', data=data)
+        response = self.client.post(self.get_url(base_url, **url_data), data=data)
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(Comment.objects.filter_parents_by_object(self.post_1).count(), comments_count + 2)
-        self.assertEqual(Comment.objects.all().count(), all_comments + 3)
+        self.increase_count(parent=True)
+        self.comment_count_test()
+
+        # test anonymous commenting
+        self.client.logout()
+
+        # test invalid data
+        data = {'content': 'new anonymous comment from api', 'email': ''}
+        url = self.get_url(base_url, **url_data)
+        response = self.client.post(url, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json()['email'], [EmailError.EMAIL_MISSING])
+        self.assertTextTranslated(response.json()['email'][0], base_url)
+        # test valid data
+        data = {'content': 'new anonymous comment from api', 'email': 'a@a.com'}
+
+        response = self.client.post(url, data=data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # no count should change
+        self.comment_count_test()
 
     def test_cannot_create_child_comment(self):
         # parent id not integer
+        base_url = '/api/comments/create/'
+        url_data = self.url_data.copy()
+        parent_id = 'c'
+        url_data['parent_id'] = parent_id
         data = {'content': 'new child comment from api'}
-        response = self.client.post('/api/comments/create/?type=post&id=1&parent_id=c', data=data)
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.data['detail'], 'the parent id must be an integer')
+        response = self.client.post(self.get_url(base_url, **url_data), data=data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data['detail'],
+            ContentTypeError.ID_NOT_INTEGER.format(var_name='parent', id=parent_id)
+        )
+        self.assertTextTranslated(response.data['detail'], base_url)
 
         # parent id not exist
+        parent_id = 100
+        url_data['parent_id'] = parent_id
         data = {'content': 'new child comment from api'}
-        response = self.client.post('/api/comments/create/?type=post&id=1&parent_id=100', data=data)
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(
-            response.data['detail'],
-            "this is not a valid id for a parent comment or the parent comment does NOT belong to this model object"
-        )
+        response = self.client.post(self.get_url(base_url, **url_data), data=data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['detail'], ContentTypeError.PARENT_ID_INVALID.format(parent_id=parent_id))
+        self.assertTextTranslated(response.data['detail'], base_url)
 
         # parent id doesn't belong to the model object
+        parent_id = 1
+        url_data.update({
+            'parent_id': parent_id,
+            'model_id': 2
+        })
         data = {'content': 'new child comment from api'}
-        response = self.client.post('/api/comments/create/?type=post&id=2&parent_id=1', data=data)
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(
-            response.data['detail'],
-            "this is not a valid id for a parent comment or the parent comment does NOT belong to this model object"
-        )
+        response = self.client.post(self.get_url(base_url, **url_data), data=data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['detail'], ContentTypeError.PARENT_ID_INVALID.format(parent_id=parent_id))
 
     def test_can_retrieve_update_delete_comment(self):
         count = Comment.objects.all().count()
@@ -323,11 +395,15 @@ class APICommentFlagViewTest(APIBaseTest):
         super().setUp()
         self.comment = self.comment_1
         self.user = self.user_1
-        self.flag = self.create_flag_instance(self.user_2, self.comment_2)
         self.flag_data = {
-            'reason': 1,
+            'reason': FlagInstanceManager.reason_values[0],
             'info': '',
         }
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.flag = cls.create_flag_instance(cls.user_2, cls.comment_2)
 
     def test_flag_to_comment(self):
         comment = self.comment
@@ -406,111 +482,178 @@ class APICommentDetailForFlagStateChangeTest(APIBaseTest):
             'state': self.comment_1.flag.REJECTED
         }
 
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.flag_data = {
+            'reason': FlagInstanceManager.reason_values[0],
+            'info': None,
+        }
+        settings.COMMENT_FLAGS_ALLOWED = 1
+        # flag comment_1
+        cls.create_flag_instance(cls.user_1, cls.comment_1, **cls.flag_data)
+        cls.create_flag_instance(cls.user_2, cls.comment_1, **cls.flag_data)
+
     def get_url(self, c_id=None):
         if not c_id:
             c_id = self.comment_1.id
         return f'/api/comments/{c_id}/flag/state/change/'
 
-    def test_change_state_for_unflagged_comment(self):
-        self.assertFalse(self.comment_1.is_flagged)
+    @patch.object(settings, 'COMMENT_FLAGS_ALLOWED', 0)
+    def test_change_state_when_flagging_is_disabled(self):
         response = self.client.post(self.get_url(), data=self.data)
         self.assertEqual(response.status_code, 403)
 
+    @patch.object(settings, 'COMMENT_FLAGS_ALLOWED', 1)
+    def test_change_state_when_comment_is_not_flagged(self):
+        comment = self.comment_2
+        self.assertFalse(comment.is_flagged)
+        response = self.client.post(self.get_url(comment.id), data=self.data)
+        self.assertEqual(response.status_code, 400)
+
     def test_change_state_by_not_permitted_user(self):
-        settings.COMMENT_FLAGS_ALLOWED = 1
-        flag_data = {
-            'reason': '1',
-            'info': None,
-        }
-        self.create_flag_instance(self.user_1, self.comment_1, **flag_data)
-        self.create_flag_instance(self.user_2, self.comment_1, **flag_data)
-        self.assertTrue(self.comment_1.is_flagged)
+        comment = self.comment_1
+        self.assertTrue(comment.is_flagged)
         self.client.force_login(self.user_1)
         response = self.client.post(self.get_url(), data=self.data)
         self.assertEqual(response.status_code, 403)
 
     def test_change_state_with_wrong_state_value(self):
-        settings.COMMENT_FLAGS_ALLOWED = 1
-        flag_data = {
-            'reason': '1',
-            'info': None,
-        }
-        self.create_flag_instance(self.user_1, self.comment_1, **flag_data)
-        self.create_flag_instance(self.user_2, self.comment_1, **flag_data)
-        self.assertTrue(self.comment_1.is_flagged)
+        data = self.data.copy()
+        comment = self.comment_1
+        self.assertTrue(comment.is_flagged)
 
-        self.data['state'] = 100
-        response = self.client.post(self.get_url(), data=self.data)
+        data['state'] = 100
+        response = self.client.post(self.get_url(), data=data)
         self.assertEqual(response.status_code, 400)
 
-        self.data['state'] = "Not Int"
-        response = self.client.post(self.get_url(), data=self.data)
+        data['state'] = "Not Int"
+        response = self.client.post(self.get_url(), data=data)
         self.assertEqual(response.status_code, 400)
 
         response = self.client.post(self.get_url(), data={})
         self.assertEqual(response.status_code, 400)
 
-        self.data['state'] = self.comment_1.flag.RESOLVED
-        self.assertFalse(self.comment_1.is_edited)
-        response = self.client.post(self.get_url(), data=self.data)
+        data['state'] = comment.flag.RESOLVED
+        comment.refresh_from_db()
+        self.assertFalse(comment.is_edited)
+        response = self.client.post(self.get_url(), data=data)
         self.assertEqual(response.status_code, 400)
 
     def test_change_state_success(self):
-        settings.COMMENT_FLAGS_ALLOWED = 1
-        flag_data = {
-            'reason': '1',
-            'info': None,
-        }
-        self.create_flag_instance(self.user_1, self.comment_1, **flag_data)
-        self.create_flag_instance(self.user_2, self.comment_1, **flag_data)
-        self.assertTrue(self.comment_1.is_flagged)
-        self.assertEqual(self.comment_1.flag.state, self.comment_1.flag.FLAGGED)
+        comment = self.comment_1
+        self.assertTrue(comment.is_flagged)
+        self.assertEqual(comment.flag.state, comment.flag.FLAGGED)
 
-        self.data['state'] = self.comment_1.flag.REJECTED
-        response = self.client.post(self.get_url(), data=self.data)
+        data = self.data.copy()
+        data['state'] = comment.flag.REJECTED
+        response = self.client.post(self.get_url(), data=data)
         self.assertEqual(response.status_code, 200)
-        self.comment_1.flag.refresh_from_db()
-        self.assertEqual(self.comment_1.flag.state, self.comment_1.flag.REJECTED)
+        comment.flag.refresh_from_db()
+        self.assertEqual(comment.flag.state, comment.flag.REJECTED)
 
         sleep(1)
-        self.comment_1.content = "new content"
-        self.comment_1.save()
-        self.assertTrue(self.comment_1.is_edited)
+        comment.content = "new content"
+        comment.save()
+        self.assertTrue(comment.is_edited)
 
         # First request
-        self.data['state'] = self.comment_1.flag.RESOLVED
-        response = self.client.post(self.get_url(), data=self.data)
+        data['state'] = comment.flag.RESOLVED
+        response = self.client.post(self.get_url(), data=data)
         self.assertEqual(response.status_code, 200)
-        self.comment_1.flag.refresh_from_db()
-        self.assertEqual(self.comment_1.flag.state, self.comment_1.flag.RESOLVED)
+        comment.flag.refresh_from_db()
+        self.assertEqual(comment.flag.state, comment.flag.RESOLVED)
 
         # Second request of same state changes state to FLAGGED
-        self.data['state'] = self.comment_1.flag.RESOLVED
-        response = self.client.post(self.get_url(), data=self.data)
+        data['state'] = comment.flag.RESOLVED
+        response = self.client.post(self.get_url(), data=data)
         self.assertEqual(response.status_code, 200)
-        self.comment_1.flag.refresh_from_db()
-        self.assertEqual(self.comment_1.flag.state, self.comment_1.flag.FLAGGED)
+        comment.flag.refresh_from_db()
+        self.assertEqual(comment.flag.state, comment.flag.FLAGGED)
+
+
+class APIConfirmCommentViewTest(BaseAnonymousCommentTest, APIBaseTest):
+    def setUp(self):
+        super().setUp()
+        self.client.logout()
+        self.init_count = Comment.objects.all().count()
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.comment = cls.create_anonymous_comment(posted=timezone.now(), email='a@a.com')
+
+    def get_url(self, key=None):
+        if not key:
+            key = self.key
+
+        return f'/api/comments/confirm/{key}/'
+
+    def test_bad_signature(self):
+        key = self.key + 'invalid'
+        url = self.get_url(key)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json()['detail'], EmailError.BROKEN_VERIFICATION_LINK)
+        self.assertTextTranslated(response.data['detail'], url)
+        self.assertEqual(Comment.objects.all().count(), self.init_count)
+
+    def test_comment_exists(self):
+        comment_dict = self.comment_obj.to_dict().copy()
+        init_count = self.init_count
+        comment_dict.update({
+            'posted': str(self.comment.posted),
+            'email': self.comment.email
+        })
+        key = signing.dumps(comment_dict)
+        url = self.get_url(key)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['detail'], EmailError.USED_VERIFICATION_LINK)
+        self.assertTextTranslated(response.data['detail'], url)
+        self.assertEqual(Comment.objects.all().count(), init_count)
+
+    def test_success(self):
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        comment = Comment.objects.get(email=self.comment_obj.email, posted=self.time_posted)
+        self.assertEqual(response.data, CommentSerializer(comment).data)
+        self.assertEqual(Comment.objects.all().count(), self.init_count + 1)
 
 
 class APICommentSerializers(APIBaseTest):
+    def setUp(self):
+        super().setUp()
+        self.parent_count = Comment.objects.filter_parents_by_object(self.post_1).count()
+        self.all_count = Comment.objects.all().count()
+
+    def increase_count(self, parent=False):
+        if parent:
+            self.parent_count += 1
+        self.all_count += 1
+
+    def comment_count_test(self):
+        self.assertEqual(Comment.objects.filter_parents_by_object(self.post_1).count(), self.parent_count)
+        self.assertEqual(Comment.objects.all().count(), self.all_count)
+
     def test_get_profile_model(self):
         # missing settings attrs
-        delattr(settings, 'PROFILE_APP_NAME')
+        patch.object(settings, 'PROFILE_APP_NAME', None).start()
         profile = get_profile_model()
         self.assertIsNone(profile)
 
-        # wrong attribute value
-        setattr(settings, 'PROFILE_APP_NAME', 'wrong')
-        profile = get_profile_model()
-        self.assertIsNone(profile)
+        # providing wrong attribute value, an exception is raised
+        patch.object(settings, 'PROFILE_APP_NAME', 'wrong').start()
+        self.assertRaises(LookupError, get_profile_model)
 
         # attribute value is None
-        setattr(settings, 'PROFILE_APP_NAME', None)
+        patch.object(settings, 'PROFILE_APP_NAME', None).start()
         profile = get_profile_model()
         self.assertIsNone(profile)
 
         # success
-        setattr(settings, 'PROFILE_APP_NAME', 'user_profile')
+        patch.object(settings, 'PROFILE_APP_NAME', 'user_profile').start()
         profile = get_profile_model()
         self.assertIsNotNone(profile)
 
@@ -525,48 +668,49 @@ class APICommentSerializers(APIBaseTest):
 
     def test_user_serializer(self):
         # PROFILE_MODEL_NAME not provided
-        delattr(settings, 'PROFILE_MODEL_NAME')
-        profile = UserSerializer.get_profile(self.user_1)
+        patch.object(settings, 'PROFILE_MODEL_NAME', None).start()
+        profile = UserSerializerDAB.get_profile(self.user_1)
         self.assertIsNone(profile)
 
         # PROFILE_MODEL_NAME is wrong
-        setattr(settings, 'PROFILE_MODEL_NAME', 'wrong')
-        profile = UserSerializer.get_profile(self.user_1)
+        patch.object(settings, 'PROFILE_MODEL_NAME', 'wrong').start()
+        profile = UserSerializerDAB.get_profile(self.user_1)
         self.assertIsNone(profile)
 
         # success
-        setattr(settings, 'PROFILE_MODEL_NAME', 'userprofile')
-        profile = UserSerializer.get_profile(self.user_1)
+        patch.object(settings, 'PROFILE_MODEL_NAME', 'userprofile').start()
+        profile = UserSerializerDAB.get_profile(self.user_1)
         self.assertIsNotNone(profile)
 
-        # user doesn't have profile attribute
-        mocked_getattr = patch('comment.api.serializers.getattr').start()
-        mocked_getattr.side_effect = [AttributeError]
-        profile = UserSerializer.get_profile(self.user_1)
-        self.assertIsNone(profile)
-
     def test_comment_create_serializer(self):
-        parent_count = Comment.objects.filter_parents_by_object(self.post_1).count()
-        self.assertEqual(parent_count, 3)
-        all_count = Comment.objects.all().count()
-        self.assertEqual(all_count, 8)
+        self.assertEqual(self.parent_count, 3)
+        self.assertEqual(self.all_count, 8)
+
+        factory = RequestFactory()
+        request = factory.get('/')
+        request.user = self.user_1
         data = {
-            'model_type': 'post',
+            'model_name': 'post',
+            'app_name': 'post',
             'model_id': self.post_1.id,
             'user': self.user_1,
             'parent_id': None,
+            'request': request
         }
+        settings.COMMENT_ALLOW_ANONYMOUS = False
+
         serializer = CommentCreateSerializer(context=data)
+        self.assertIsNone(serializer.fields.get('email'))
         comment = serializer.create(validated_data={'content': 'test'})
-        self.assertEqual(Comment.objects.filter_parents_by_object(self.post_1).count(), parent_count + 1)
-        self.assertEqual(Comment.objects.all().count(), all_count + 1)
+        self.increase_count(parent=True)
+        self.comment_count_test()
         self.assertIsNotNone(comment)
 
         data['parent_id'] = 0
         serializer = CommentCreateSerializer(context=data)
         comment = serializer.create(validated_data={'content': 'test'})
-        self.assertEqual(Comment.objects.filter_parents_by_object(self.post_1).count(), parent_count + 2)
-        self.assertEqual(Comment.objects.all().count(), all_count + 2)
+        self.increase_count(parent=True)
+        self.comment_count_test()
         self.assertIsNotNone(comment)
 
         # get parent
@@ -582,8 +726,8 @@ class APICommentSerializers(APIBaseTest):
         data['parent_id'] = 1
         serializer = CommentCreateSerializer(context=data)
         comment = serializer.create(validated_data={'content': 'test'})
-        self.assertEqual(Comment.objects.filter_parents_by_object(self.post_1).count(), parent_count + 2)
-        self.assertEqual(Comment.objects.all().count(), all_count + 3)
+        self.increase_count()
+        self.comment_count_test()
         self.assertIsNotNone(comment)
 
         # get parent
@@ -599,6 +743,21 @@ class APICommentSerializers(APIBaseTest):
         reply_count = serializer.get_reply_count(self.comment_4)
         self.assertEqual(replies, [])
         self.assertEqual(reply_count, 0)
+
+        # test anonymous commenting
+        from django.contrib.auth.models import AnonymousUser
+        request.user = AnonymousUser()
+        settings.COMMENT_ALLOW_ANONYMOUS = True
+        serializer = CommentCreateSerializer(context=data)
+
+        self.assertIsNotNone(serializer.fields['email'])
+        comment = serializer.create(validated_data={
+            'content': 'anonymous posting',
+            'email': 'abc@abc.com'
+        })
+        # no creation occurs until comment is verified
+        self.comment_count_test()
+        self.assertIsNotNone(comment)
 
     def test_passing_context_to_serializer(self):
         serializer = CommentSerializer(self.comment_1)

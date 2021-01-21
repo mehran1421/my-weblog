@@ -30,6 +30,7 @@ urlpatterns = [
     path('account/', include('account.urls')),
     path('ckeditor/', include('ckeditor_uploader.urls')),
     path('comment/', include('comment.urls')),
+    re_path(r'^ratings/', include('star_ratings.urls', namespace='ratings')),
 
 ]
 

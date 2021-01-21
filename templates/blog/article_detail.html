@@ -1,6 +1,7 @@
 {% extends 'blog/base.html' %}
 {% load base_tags %}
 {% load comment_tags %}
+{% load ratings %}
 
 
 <div class="culmn">
@@ -34,6 +35,8 @@
                                             <span class="badge"
                                                   style="background-color: red">مقاله ویژه</span>
                                         {% endif %}
+                                    <br/>
+                                    <div>{% ratings object %}</div>
                                     </ul>
                                 </div>
                             </div>

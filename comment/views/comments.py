@@ -1,19 +1,26 @@
-from django.shortcuts import render, get_object_or_404
-from django.http import JsonResponse, HttpResponseBadRequest
-from django.core.exceptions import PermissionDenied
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.generic import FormView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils import timezone
+from django.views import View
+from django.contrib import messages
 from django.core.mail import EmailMessage
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 
 from comment.models import Comment
 from comment.forms import CommentForm
-from comment.utils import get_comment_context_data, get_model_obj, is_comment_admin, is_comment_moderator
+from comment.utils import (
+    get_comment_context_data, get_model_obj, get_comment_from_key, process_anonymous_commenting,
+    get_user_for_request, CommentFailReason
+)
+from comment.mixins import CanCreateMixin, CanEditMixin, CanDeleteMixin
+from comment.conf import settings
+from comment.messages import EmailError
 
 
-class BaseCommentView(LoginRequiredMixin, FormView):
+class BaseCommentView(FormView):
     form_class = CommentForm
 
     def get_context_data(self, **kwargs):
@@ -22,13 +29,13 @@ class BaseCommentView(LoginRequiredMixin, FormView):
         context.update(get_comment_context_data(self.request))
         return context
 
-    def post(self, request, *args, **kwargs):
-        if not request.is_ajax():
-            return HttpResponseBadRequest('Only AJAX request are allowed')
-        return super().post(request, *args, **kwargs)
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['request'] = self.request
+        return kwargs
 
 
-class CreateComment(BaseCommentView):
+class CreateComment(CanCreateMixin, BaseCommentView):
     comment = None
 
     def get_context_data(self, **kwargs):
@@ -37,88 +44,102 @@ class CreateComment(BaseCommentView):
         return context
 
     def get_template_names(self):
-        if self.comment.is_parent:
+        if self.request.user.is_anonymous or self.comment.is_parent:
             return ['comment/comments/base.html']
         else:
             return ['comment/comments/child_comment.html']
 
     def form_valid(self, form):
-        app_name = self.request.POST.get('app_name')
-        model_name = self.request.POST.get('model_name')
-        model_id = self.request.POST.get('model_id')
+        app_name = self.app_name
+        model_name = self.model_name
+        model_id = self.model_id
         model_object = get_model_obj(app_name, model_name, model_id)
-        parent_id = self.request.POST.get('parent_id')
-        parent_comment = None
-        if parent_id:
-            parent_qs = Comment.objects.filter(id=parent_id)
-            if parent_qs.exists():
-                parent_comment = parent_qs.first()
+        parent_id = self.parent_id
+        parent_comment = Comment.objects.get_parent_comment(parent_id)
+        user = get_user_for_request(self.request)
+
         comment_content = form.cleaned_data['content']
-        self.comment = Comment.objects.create(
+        email = form.cleaned_data.get('email', None) or user.email
+        time_posted = timezone.now()
+        _comment = Comment(
             content_object=model_object,
             content=comment_content,
-            user=self.request.user,
+            user=user,
             parent=parent_comment,
+            email=email,
+            posted=time_posted
         )
 
-        # send email section
-        current_site = get_current_site(self.request)
-        article = self.comment.content_object
-        author_email = article.author.email
-        user_email = self.comment.user.email
-        if author_email == user_email:
-            author_email = False
-            user_email = False
-        parent_email = False
-        if self.comment.parent:
-            parent_email = self.comment.parent.user.email
-            if parent_email in [author_email, user_email]:
-                parent_email = False
+        if settings.COMMENT_ALLOW_ANONYMOUS and not user:
+            # send response, please verify your email to post this comment.
+            response_msg = process_anonymous_commenting(self.request, _comment)
+            messages.info(self.request, response_msg)
+        else:
+            _comment.save()
+            self.comment = _comment
 
-        if author_email:
-            email = EmailMessage(
-                        "دیدگاه جدید",
-                        "دیدگاه جدیدی برای مقاله «{}» که شما نوینده آن هستید، ارسال شده:\n{}{}".format(article, current_site, reverse('blog:detail', kwargs={'slug': article.slug})),
-                        to=[author_email]
-            )
-            email.send()
+            # send email section
+            current_site = get_current_site(self.request)
+            article = self.comment.content_object
+            author_email = article.author.email
+            user_email = self.comment.user.email
+            if author_email == user_email:
+                author_email = False
+                user_email = False
+            parent_email = False
+            if self.comment.parent:
+                parent_email = self.comment.parent.user.email
+                if parent_email in [author_email, user_email]:
+                    parent_email = False
 
-        if user_email:
-            email = EmailMessage(
-                        "دیدگاه دریافت شد",
-                        "دیدگاه شما دریافت شد و به زودی به آن پاسخ می دهیم.",
-                        to=[user_email]
-            )
-            email.send()
+            if author_email:
+                email = EmailMessage(
+                    "دیدگاه جدید",
+                    "دیدگاه جدیدی برای مقاله «{}» که شما نوینده آن هستید، ارسال شده:\n{}{}".format(article,
+                                                                                                   current_site,
+                                                                                                   reverse(
+                                                                                                       'blog:detail',
+                                                                                                       kwargs={
+                                                                                                           'slug': article.slug})),
+                    to=[author_email]
+                )
+                email.send()
 
-        if parent_email:
-            email = EmailMessage(
-                        "پاسخ به دیدگاه شما",
-                        "پاسخی به دیدگاه شما در مقاله «{}» ثبت شده است. برای مشاهده بر روی لینک زیر کلیک کنید:\n{}{}".format(article, current_site, reverse('blog:detail', kwargs={'slug': article.slug})),
-                        to=[parent_email]
-            )
-            email.send()
+            if user_email:
+                email = EmailMessage(
+                    "دیدگاه دریافت شد",
+                    "دیدگاه شما دریافت شد و به زودی به آن پاسخ می دهیم.",
+                    to=[user_email]
+                )
+                email.send()
+
+            if parent_email:
+                email = EmailMessage(
+                    "پاسخ به دیدگاه شما",
+                    "پاسخی به دیدگاه شما در مقاله «{}» ثبت شده است. برای مشاهده بر روی لینک زیر کلیک کنید:\n{}{}".format(
+                        article, current_site, reverse('blog:detail', kwargs={'slug': article.slug})),
+                    to=[parent_email]
+                )
+                email.send()
 
         return self.render_to_response(self.get_context_data())
 
 
-class UpdateComment(BaseCommentView):
+class UpdateComment(CanEditMixin, BaseCommentView):
     comment = None
 
-    def dispatch(self, request, *args, **kwargs):
+    def get_object(self):
         self.comment = get_object_or_404(Comment, pk=self.kwargs.get('pk'))
-        if request.user != self.comment.user:
-            raise PermissionDenied
-        return super().dispatch(request, *args, **kwargs)
+        return self.comment
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
-        context['comment_form'] = CommentForm(instance=self.comment)
+        context['comment_form'] = CommentForm(instance=self.comment, request=self.request)
         context['comment'] = self.comment
         return render(request, 'comment/comments/update_comment.html', context)
 
     def post(self, request, *args, **kwargs):
-        form = CommentForm(request.POST, instance=self.comment)
+        form = CommentForm(request.POST, instance=self.comment, request=self.request)
         context = self.get_context_data()
         if form.is_valid():
             form.save()
@@ -126,20 +147,18 @@ class UpdateComment(BaseCommentView):
             return render(request, 'comment/comments/comment_content.html', context)
 
 
-class DeleteComment(BaseCommentView):
+class DeleteComment(CanDeleteMixin, BaseCommentView):
     comment = None
 
-    def dispatch(self, request, *args, **kwargs):
+    def get_object(self):
         self.comment = get_object_or_404(Comment, pk=self.kwargs.get('pk'))
-        if request.user != self.comment.user and not is_comment_admin(request.user) \
-                and not (self.comment.is_flagged and is_comment_moderator(request.user)):
-            raise PermissionDenied
-        return super().dispatch(request, *args, **kwargs)
+        return self.comment
 
     def get(self, request, *args, **kwargs):
         data = dict()
         context = self.get_context_data()
         context["comment"] = self.comment
+        context['has_parent'] = not self.comment.is_parent
         data['html_form'] = render_to_string('comment/comments/comment_modal.html', context, request=request)
         return JsonResponse(data)
 
@@ -147,3 +166,20 @@ class DeleteComment(BaseCommentView):
         self.comment.delete()
         context = self.get_context_data()
         return render(request, 'comment/comments/base.html', context)
+
+
+class ConfirmComment(View):
+    @staticmethod
+    def get(request, *args, **kwargs):
+        key = kwargs.get('key', None)
+        comment = get_comment_from_key(key)
+
+        if comment.why_invalid == CommentFailReason.BAD:
+            messages.error(request, EmailError.BROKEN_VERIFICATION_LINK)
+        elif comment.why_invalid == CommentFailReason.EXISTS:
+            messages.warning(request, EmailError.USED_VERIFICATION_LINK)
+
+        if not comment.is_valid:
+            return render(request, template_name='comment/anonymous/discarded.html')
+
+        return redirect(comment.obj.get_url(request))

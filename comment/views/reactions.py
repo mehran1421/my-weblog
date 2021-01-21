@@ -1,23 +1,21 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
-from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.decorators.http import require_POST
 
 from comment.models import Comment, Reaction, ReactionInstance
+from comment.mixins import BaseCommentMixin
+from comment.messages import ReactionInfo
 
 
 @method_decorator(require_POST, name='dispatch')
-class SetReaction(LoginRequiredMixin, View):
+class SetReaction(BaseCommentMixin, View):
 
-    def post(self, request, *args, **kwargs):
+    @staticmethod
+    def post(request, *args, **kwargs):
         comment = get_object_or_404(Comment, id=kwargs.get('pk'))
-        if not request.is_ajax():
-            return HttpResponseBadRequest(_('Only AJAX request are allowed'))
-
         reaction_type = kwargs.get('reaction', None)
         reaction_obj = Reaction.objects.get_reaction_object(comment)
         try:
@@ -30,6 +28,6 @@ class SetReaction(LoginRequiredMixin, View):
             'status': 0,
             'likes': comment.likes,
             'dislikes': comment.dislikes,
-            'msg': _('Your reaction has been updated successfully')
+            'msg': ReactionInfo.UPDATED_SUCCESS
         }
         return JsonResponse(response)

@@ -1,11 +1,12 @@
 from time import sleep
 from unittest.mock import patch
 
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from django.utils import timezone
 
-from comment.models import Comment, Flag, FlagInstance, Reaction, ReactionInstance
+from comment.conf import settings
+from comment.models import Comment, FlagInstance, ReactionInstance
 from comment.tests.base import BaseCommentManagerTest, BaseCommentTest, BaseCommentFlagTest
 
 
@@ -17,6 +18,7 @@ class CommentModelTest(BaseCommentManagerTest):
         self.assertEqual(repr(parent_comment), f'comment by {parent_comment.user}: {parent_comment.content[:20]}')
         self.assertTrue(parent_comment.is_parent)
         self.assertEqual(parent_comment.replies().count(), 0)
+        self.assertIsNotNone(parent_comment.urlhash)
 
         child_comment = self.create_comment(self.content_object_1, parent=parent_comment)
         self.assertIsNotNone(child_comment)
@@ -24,12 +26,19 @@ class CommentModelTest(BaseCommentManagerTest):
         self.assertEqual(repr(child_comment), f'reply by {child_comment.user}: {child_comment.content[:20]}')
         self.assertFalse(child_comment.is_parent)
         self.assertEqual(parent_comment.replies().count(), 1)
+        self.assertIsNotNone(child_comment.urlhash)
 
-        self.assertFalse(parent_comment.is_edited)
-        parent_comment.content = 'updated'
+    def test_is_edited(self):
+        comment = self.create_comment(self.content_object_1)
+        self.assertFalse(comment.is_edited)
+        comment.content = 'updated'
         sleep(1)
-        parent_comment.save()
-        self.assertTrue(parent_comment.is_edited)
+        comment.save()
+        self.assertTrue(comment.is_edited)
+
+    def test_is_edited_for_anonymous_comment(self):
+        comment = self.create_anonymous_comment(posted=timezone.now() - timezone.timedelta(days=1))
+        self.assertFalse(comment.is_edited)
 
     def test_replies_method(self):
         self.assertEqual(self.parent_comment_2.replies().count(), 3)
@@ -41,21 +50,6 @@ class CommentModelTest(BaseCommentManagerTest):
         # default replies hide flagged comment
         self.assertEqual(self.parent_comment_2.replies().count(), 2)
         self.assertEqual(self.parent_comment_2.replies(include_flagged=True).count(), 3)
-
-    def test_reaction_signal(self):
-        """Test reaction model instance is created when a comment is created"""
-        parent_comment = self.create_comment(self.content_object_1)
-        self.assertIsNotNone(Reaction.objects.get(comment=parent_comment))
-        # 1 reaction instance is created for every comment
-        self.assertEqual(Reaction.objects.count(), self.increment)
-
-    def test_flag_signal(self):
-        """Test flag model instance is created when a comment is created"""
-        current_count = Flag.objects.count()
-        parent_comment = self.create_comment(self.content_object_1)
-        self.assertIsNotNone(Flag.objects.get(comment=parent_comment))
-        # 1 flag instance is created for every comment
-        self.assertEqual(Flag.objects.count(), current_count + 1)
 
     @patch('comment.models.comments.hasattr')
     def test_is_flagged_property(self, mocked_hasattr):
@@ -110,6 +104,45 @@ class CommentModelTest(BaseCommentManagerTest):
         mocked_hasattr.return_value = False
         self.assertFalse(comment.has_resolved_state)
 
+    @patch('comment.managers.CommentManager.generate_urlhash')
+    def test_urlhash_is_unique(self, mocked_generate_urlhash):
+        mocked_generate_urlhash.side_effect = ['first_urlhash', 'first_urlhash', 'second_urlhash']
+        first_comment = self.create_comment(self.content_object_1)
+        self.assertEqual(first_comment.urlhash, 'first_urlhash')
+        mocked_generate_urlhash.assert_called_once()
+        second_comment = self.create_comment(self.content_object_1)
+        self.assertEqual(second_comment.urlhash, 'second_urlhash')
+        self.assertEqual(mocked_generate_urlhash.call_count, 3)
+
+    def test_comment_email(self):
+        comment = self.parent_comment_1
+        self.assertEqual(comment.email, comment.user.email)
+
+    def test_get_url(self):
+        from comment.tests.base import RequestFactory
+
+        factory = RequestFactory()
+        request = factory.get('/')
+        request.user = self.user_1
+        attr = 'COMMENT_PER_PAGE'
+        comment = self.parent_comment_3
+
+        # no pagination(parent comment 3, 2, 1 belong to the same content_object_1)
+        patch.object(settings, attr, 0).start()
+        comment_url = comment.content_object.get_absolute_url() + '#' + comment.urlhash
+
+        self.assertEqual(comment_url, comment.get_url(request))
+
+        # with pagination
+        patch.object(settings, attr, 3).start()
+        # comment on first page
+        self.assertEqual(comment_url, comment.get_url(request))
+
+        # comment on the second page
+        comment = self.parent_comment_1
+        comment_url = comment.content_object.get_absolute_url() + '?page=2' + '#' + comment.urlhash
+        self.assertEqual(comment_url, comment.get_url(request))
+
 
 class CommentModelManagerTest(BaseCommentManagerTest):
 
@@ -120,9 +153,9 @@ class CommentModelManagerTest(BaseCommentManagerTest):
         parent_comments = Comment.objects.all_parents().count()
         self.assertEqual(parent_comments, 5)
 
+    @patch.object(settings, 'COMMENT_FLAGS_ALLOWED', 1)
     def test_filtering_flagged_comment(self):
-        settings.COMMENT_FLAGS_ALLOWED = 1
-        comment = self.create_comment(self.content_object_1)
+        comment = self.parent_comment_1
         self.assertEqual(Comment.objects.all_exclude_flagged().count(), self.increment)
         self.create_flag_instance(self.user_1, comment)
         self.create_flag_instance(self.user_2, comment)
@@ -133,9 +166,9 @@ class CommentModelManagerTest(BaseCommentManagerTest):
         self.assertEqual(Comment.objects.all_exclude_flagged().count(), self.increment)
         settings.COMMENT_SHOW_FLAGGED = False
 
+    @patch.object(settings, 'COMMENT_FLAGS_ALLOWED', 0)
     def test_filtering_comment_when_flag_not_enabled(self):
-        settings.COMMENT_FLAGS_ALLOWED = 0
-        comment = self.create_comment(self.content_object_1)
+        comment = self.parent_comment_1
         self.assertEqual(Comment.objects.all_exclude_flagged().count(), self.increment)
         self.create_flag_instance(self.user_1, comment)
         self.create_flag_instance(self.user_2, comment)
@@ -149,6 +182,7 @@ class CommentModelManagerTest(BaseCommentManagerTest):
         self.assertEqual(init_count, 6)
 
         settings.COMMENT_FLAGS_ALLOWED = 1
+        settings.COMMENT_SHOW_FLAGGED = False
         comment = self.post_1.comments.first()
         self.create_flag_instance(self.user_1, comment)
         self.create_flag_instance(self.user_2, comment)
@@ -165,6 +199,7 @@ class CommentModelManagerTest(BaseCommentManagerTest):
         init_count = self.post_2.comments.filter(parent=None).count()
         self.assertEqual(init_count, 2)
         settings.COMMENT_FLAGS_ALLOWED = 1
+        settings.COMMENT_SHOW_FLAGGED = False
         comment = Comment.objects.filter_parents_by_object(self.post_2).first()
         self.create_flag_instance(self.user_1, comment)
         self.create_flag_instance(self.user_2, comment)
@@ -176,58 +211,17 @@ class CommentModelManagerTest(BaseCommentManagerTest):
         count = Comment.objects.filter_parents_by_object(self.post_2, include_flagged=True).count()
         self.assertEqual(count, init_count)
 
-    def test_create_comment_by_model_type(self):
-        comments = Comment.objects.all_comments_by_object(self.post_1).count()
-        self.assertEqual(comments, 6)
-        parent_comment = Comment.objects.create_by_model_type(
-            model_type='post',
-            pk=self.post_1.id,
-            content='test',
-            user=self.user_1
-        )
+    def test_get_parent_comment(self):
+        # no parent_id passed from the url
+        self.assertIsNone(Comment.objects.get_parent_comment(''))
+        # no parent_id passed as 0
+        self.assertIsNone(Comment.objects.get_parent_comment('0'))
+        # no parent_id doesn't exist passed -> although this is highly unlikely as this will be handled by the mixin
+        # but is useful for admin interface if required
+        self.assertIsNone(Comment.objects.get_parent_comment(100))
+        parent_comment = Comment.objects.get_parent_comment(1)
         self.assertIsNotNone(parent_comment)
-        comments = Comment.objects.all_comments_by_object(self.post_1).count()
-        self.assertEqual(comments, 7)
-
-        child_comment = Comment.objects.create_by_model_type(
-            model_type='post',
-            pk=self.post_1.id,
-            content='test',
-            user=self.user_1,
-            parent_obj=parent_comment
-        )
-        self.assertIsNotNone(child_comment)
-        comments = Comment.objects.all_comments_by_object(self.post_1).count()
-        self.assertEqual(comments, 8)
-
-        # fail on wrong content_type
-        comment = Comment.objects.create_by_model_type(
-            model_type='not exist',
-            pk=self.post_1.id,
-            content='test',
-            user=self.user_1,
-            parent_obj=parent_comment
-        )
-        self.assertIsNone(comment)
-
-        # model object not exist
-        comment = Comment.objects.create_by_model_type(
-            model_type='post',
-            pk=100,
-            content='test',
-            user=self.user_1,
-            parent_obj=parent_comment
-        )
-        self.assertIsNone(comment)
-
-    def test_create_comment_with_not_exist_model(self):
-        comment = Comment.objects.create_by_model_type(
-            model_type='not exist model',
-            pk=self.post_1.id,
-            content='test',
-            user=self.user_1
-        )
-        self.assertIsNone(comment)
+        self.assertEqual(parent_comment, self.parent_comment_1)
 
 
 class ReactionInstanceModelTest(BaseCommentManagerTest):
@@ -247,24 +241,6 @@ class ReactionInstanceModelTest(BaseCommentManagerTest):
         """Test Integrity error is raised when one user is set to have more than 1 reaction type for the same comment"""
         self.create_reaction_instance(self.user, self.comment, self.LIKE)
         self.assertRaises(IntegrityError, self.create_reaction_instance, self.user, self.comment, self.DISLIKE)
-
-    def test_post_save_signal_increases_count_on_creation(self):
-        """Test reaction count is increased on creation"""
-        comment = self.comment
-        self.create_reaction_instance(self.user, self.comment, self.LIKE)
-        comment.refresh_from_db()
-        self.assertEqual(comment.likes, 1)
-        self.assertEqual(comment.dislikes, 0)
-
-    def test_post_delete_signal_decreases_count(self):
-        """Test reaction count is decreased when an instance is deleted"""
-        comment = self.comment
-        instance = self.create_reaction_instance(self.user, self.comment, self.LIKE)
-        comment.refresh_from_db()
-        self.assertEqual(comment.likes, 1)
-        instance.delete()
-        comment.refresh_from_db()
-        self.assertEqual(comment.likes, 0)
 
     def test_comment_property_likes_increase_and_decrease(self):
         """Test decrease and increase on likes property with subsequent request."""
@@ -354,29 +330,13 @@ class ReactionModelTest(BaseCommentTest):
 
         self.assertEqual(self.comment_1.reaction.dislikes, 0)
 
-    def test_increase_reaction_signal(self):
-        self.assertEqual(self.comment_1.reaction.likes, 0)
-        # reaction instance created
-        reaction_instance = ReactionInstance.objects.create(
-            reaction=self.comment_1.reaction, user=self.user_1, reaction_type=1)
-        self.comment_1.reaction.refresh_from_db()
-        self.assertEqual(self.comment_1.reaction.likes, 1)
-        self.assertEqual(self.comment_1.reaction.dislikes, 0)
-
-        # edit reaction instance won't change reaction count
-        reaction_instance.reaction_type = 2  # dislike
-        reaction_instance.save()
-        self.comment_1.reaction.refresh_from_db()
-        self.assertEqual(self.comment_1.reaction.likes, 1)
-        self.assertEqual(self.comment_1.reaction.dislikes, 0)
-
 
 class ReactionInstanceManagerTest(BaseCommentTest):
     def test_clean_reaction_type(self):
-        LIKE = ReactionInstance.ReactionType.LIKE
+        like = ReactionInstance.ReactionType.LIKE
         # valid reaction type
-        reaction_type = ReactionInstance.objects.clean_reaction_type(LIKE.name)
-        self.assertEqual(reaction_type, LIKE.value)
+        reaction_type = ReactionInstance.objects.clean_reaction_type(like.name)
+        self.assertEqual(reaction_type, like.value)
 
         # invalid reaction type
         self.assertRaises(ValidationError, ReactionInstance.objects.clean_reaction_type, 1)
@@ -394,38 +354,18 @@ class FlagInstanceModelTest(BaseCommentFlagTest):
         comment.refresh_from_db()
         self.assertEqual(comment.flag.count, 1)
 
-    def test_post_delete_signal_decreases_count(self):
-        """Test flag count is decreased when an instance is deleted"""
-        data = self.flag_data
-        comment = self.comment
-        instance = self.create_flag_instance(self.user, comment, **data)
-        comment.refresh_from_db()
-        self.assertEqual(comment.flag.count, 1)
-        instance.delete()
-        comment.refresh_from_db()
-        self.assertEqual(comment.flag.count, 0)
-
-    def test_post_save_signal_increases_count_on_creation(self):
-        comment = self.comment
-        self.create_flag_instance(self.user, comment)
-        comment.refresh_from_db()
-        self.assertEqual(comment.flag.count, 1)
-
 
 class FlagInstanceManagerTest(BaseCommentFlagTest):
-    def setUp(self):
-        super().setUp()
-
     def test_clean_reason_for_invalid_value(self):
-        data = self.flag_data
+        data = self.flag_data.copy()
         data.update({'reason': -1})
         self.assertRaises(ValidationError, self.set_flag, self.user, self.comment, **data)
 
-        data.update({'reason': 'abcd'})
+        data.update({'reason': 'abc'})
         self.assertRaises(ValidationError, self.set_flag, self.user, self.comment, **data)
 
     def test_clean_for_invalid_values(self):
-        data = self.flag_data
+        data = self.flag_data.copy()
         user = self.user
         comment = self.comment
         # info can't be blank with the last reason(something else)
@@ -436,7 +376,7 @@ class FlagInstanceManagerTest(BaseCommentFlagTest):
         self.assertRaises(ValidationError, self.set_flag, user, comment, **data)
 
     def test_clean_ignores_info_for_all_reasons_except_last(self):
-        data = self.flag_data
+        data = self.flag_data.copy()
         info = 'Hi'
         data['info'] = info
         user = self.user
@@ -463,7 +403,7 @@ class FlagInstanceManagerTest(BaseCommentFlagTest):
         self.assertTrue(self.set_flag(self.user, self.comment, **self.flag_data))
         self.assertRaises(ValidationError, self.set_flag, self.user, self.comment, **self.flag_data)
 
-    def test_unflag_non_exist_flag(self):
+    def test_un_flag_non_exist_flag(self):
         # user try to un-flag comment that wasn't flagged yet
         self.assertRaises(ValidationError, self.set_flag, self.user, self.comment)
 
@@ -482,20 +422,6 @@ class FlagModelTest(BaseCommentFlagTest):
     def test_comment_author(self):
         comment = self.comment
         self.assertEqual(comment.user, comment.flag.comment_author)
-
-    def test_increase_flag_signal(self):
-        self.assertEqual(self.comment.flag.count, 0)
-        # instance created
-        self.set_flag(self.user, self.comment, **self.flag_data)
-        self.comment.flag.refresh_from_db()
-        self.assertEqual(self.comment.flag.count, 1)
-        # instance edited won't increase the flag count
-        flag_instance = FlagInstance.objects.get(user=self.user, flag__comment=self.comment)
-        self.assertIsNotNone(flag_instance)
-        flag_instance.info = 'change value for test'
-        flag_instance.save()
-        self.comment.flag.refresh_from_db()
-        self.assertEqual(self.comment.flag.count, 1)
 
     def test_is_flagged_enabled(self):
         flag = self.create_comment(self.content_object_1).flag

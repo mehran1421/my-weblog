@@ -59,6 +59,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'myblog.middleware.SaveIPAddressMiddleware',
 ]
 
 ROOT_URLCONF = 'blog_mehran.urls'
@@ -157,6 +158,8 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 
+STAR_RATINGS_RERATE = False
 STAR_RATINGS_STAR_HEIGHT=16
 # STAR_RATINGS_RANGE=10
-STAR_RATINGS_ANONYMOUS = True
+# STAR_RATINGS_ANONYMOUS = True
+

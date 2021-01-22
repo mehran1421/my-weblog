@@ -14,16 +14,21 @@ class ArticleList(ListView):
 
 class ArticleDetail(ListView):
     template_name="blog/article_detail.html"
+
     def get_queryset(self):
-        global slug,article
+        global slug,article_published,article
         slug=self.kwargs.get('slug')
-        article=Article.objects.published()
-        return article
+        article_published=Article.objects.published()
+        article=get_object_or_404(article_published,slug=slug)
+        ip_address=self.request.user.ip_address
+        if ip_address not in article.hits.all():
+            article.hits.add(ip_address)
+        return article_published
 
     def get_context_data(self,**kwargs):
         context=super().get_context_data(**kwargs)
-        context['object']=get_object_or_404(article,slug=slug)
-        context['res_articles']=article[:5]
+        context['object']=article
+        context['res_articles']=article_published[:5]
         return context
 
 

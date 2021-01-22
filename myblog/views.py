@@ -4,6 +4,7 @@ from django.views.generic import ListView
 from django.shortcuts import get_object_or_404
 from account.models import User
 from account.mixins import AuthorAccessMixin
+from django.db.models import Count,Q
 
 # Create your views here.
 
@@ -18,7 +19,9 @@ class ArticleDetail(ListView):
     def get_queryset(self):
         global slug,article_published,article
         slug=self.kwargs.get('slug')
-        article_published=Article.objects.published()
+        article_published=Article.objects.published().annotate(
+            count=Count('hits')
+        ).order_by('-count','publish')
         article=get_object_or_404(article_published,slug=slug)
         ip_address=self.request.user.ip_address
         if ip_address not in article.hits.all():
@@ -74,4 +77,18 @@ class AuthorList(ListView):
     def get_context_data(self,**kwargs):
         context=super().get_context_data(**kwargs)
         context['author']=author
+        return context
+
+class SearchList(ListView):
+    paginate_by=6
+    template_name="blog/search_list.html"
+
+    def get_queryset(self):
+        global search
+        search=self.request.GET.get('q')
+        return Article.objects.filter(Q(description__icontains=search)|Q(title=search))
+
+    def get_context_data(self,**kwargs):
+        context=super().get_context_data(**kwargs)
+        context['search']=search
         return context

@@ -103,7 +103,8 @@ class Article(models.Model):
     is_special = models.BooleanField(default=False, verbose_name="آیا مقاله ی ویژه باشد؟")
     status = models.CharField(max_length=1, choices=Status_Choise, verbose_name="وضعیت")
     comments = GenericRelation(Comment)
-    hits=models.ManyToManyField(IPAddress,blank=True,related_name='hits',verbose_name='بازدیدها')
+    #وقتی از through استفاده میکنیم یعنی میخواهیم علاوه بر اون فیلدها یه فیلد دیگری هم داشته باشیم
+    hits=models.ManyToManyField(IPAddress,through='ArticleHit',blank=True,related_name='hits',verbose_name='بازدیدها')
 
     class Meta:
         verbose_name = "مقاله"
@@ -147,3 +148,8 @@ def product_pre_save_receiver(sender, instance, *args, **kwargs):
 
 
 pre_save.connect(product_pre_save_receiver, sender=Article)
+
+class ArticleHit(models.Model):
+    article=models.ForeignKey(Article,on_delete=models.CASCADE)
+    ip_address=models.ForeignKey(IPAddress,on_delete=models.CASCADE)
+    created=models.DateTimeField(auto_now_add=True)

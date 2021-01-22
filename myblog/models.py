@@ -39,6 +39,9 @@ class CategoryManager(models.Manager):
         return self.filter(status=True)
 
 
+class IPAddress(models.Model):
+    ip_address=models.GenericIPAddressField(verbose_name='ادرس آی پی')
+
 class Category(models.Model):
     parent = models.ForeignKey('self', default=None, null=True, blank=True, on_delete=models.SET_NULL,
                                related_name="children", verbose_name="زیردسته")
@@ -100,6 +103,7 @@ class Article(models.Model):
     is_special = models.BooleanField(default=False, verbose_name="آیا مقاله ی ویژه باشد؟")
     status = models.CharField(max_length=1, choices=Status_Choise, verbose_name="وضعیت")
     comments = GenericRelation(Comment)
+    hits=models.ManyToManyField(IPAddress,blank=True,related_name='hits',verbose_name='بازدیدها')
 
     class Meta:
         verbose_name = "مقاله"

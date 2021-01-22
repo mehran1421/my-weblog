@@ -37,6 +37,7 @@
                                         {% endif %}
                                     <br/>
                                     <div>{% ratings object %}</div>
+                                    <p>بازدید:{{ object.hits.count }}نفر</p>
                                     </ul>
                                 </div>
                             </div>
@@ -97,7 +98,7 @@
             {% endblock %}
             {% block resent_post %}
                 <div class="said_post fix m-top-70">
-                    <h6 class="m-bottom-40 text-uppercase">مقاله های اخیر</h6>
+                    <h6 class="m-bottom-40 text-uppercase">مقاله های پر بازدید اخیر</h6>
                     {% for a in res_articles %}
                         <div class="post_item">
                             <div class="item_img">

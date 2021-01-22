@@ -18,7 +18,7 @@
                     </div>
                     <div class="blog_fashion_content">
                         <div>{% ratings latest %}</div>
-                        <p>بازدید:{{ article.hits.count }}نفر</p>
+                        <p>بازدید:{{ latest.hits.count }}نفر</p>
                         <ol class="breadcrumb">
                             <li><a href="{% url 'blog:author' latest.author.username %}"
                                    class="text-black">{{ latest.author.get_full_name }}</a></li>
@@ -37,7 +37,7 @@
                 </div>
             </div>
         {% endif %}
-
+    {% empty %}
     {% endfor %}
 {% endblock %}
 
@@ -78,6 +78,12 @@
                         <p class="m-top-20">{{ article.description|truncatewords:20|safe }}</p>
                     </div>
                 </div><!-- End off col-md-4 -->
+            {% empty %}
+                <div class="col-md-4"></div>
+                <div class="col-md-4">
+                    <p style="text-align: center !important;">متاسفانه هیچ مقاله ای وجود ندارد</p>
+                </div>
+                <div class="col-md-4"></div>
             {% endfor %}
 
         </div>

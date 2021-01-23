@@ -2,6 +2,7 @@
 {% load base_tags %}
 {% load comment_tags %}
 {% load ratings %}
+{% load humanize %}
 
 
 <div class="culmn">
@@ -109,7 +110,7 @@
                                 {% if a.is_special %}
                                     <span class="badge" style="background-color: red">مقاله ویژه</span>
                                 {% endif %}
-                                <p><i class="fa fa-clock-o"></i> {{ a.jpublish }}</p>
+                                <p><i class="fa fa-clock-o"></i> {{ a.publish|naturaltime }}</p>
                             </div>
                         </div>
                     {% endfor %}

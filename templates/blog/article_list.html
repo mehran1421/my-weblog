@@ -2,6 +2,7 @@
 {% load static %}
 {% load base_tags %}
 {% load ratings %}
+{% load humanize %}
 
 
 {% block title %}
@@ -23,7 +24,7 @@
                             <li><a href="{% url 'blog:author' latest.author.username %}"
                                    class="text-black">{{ latest.author.get_full_name }}</a></li>
                             <li><a href="{% url 'blog:author' latest.author.username %}"
-                                   class="text-black">{{ latest.jpublish }}</a></li>
+                                   class="text-black">{{ latest.publish|naturaltime }}</a></li>
                             {% if latest.is_special %}
                                 <span class="badge" style="background-color: red">مقاله ویژه</span>
                             {% endif %}
@@ -66,7 +67,7 @@
                             <li><a href="{% url 'blog:author' article.author.username %}"
                                    class="text-black">{{ article.author.get_full_name }}</a></li>
                             <li><a href="{% url 'blog:author' article.author.username %}"
-                                   class="text-black">{{ article.jpublish }}</a></li>
+                                   class="text-black">{{ article.publish|naturaltime }}</a></li>
                             {% if article.is_special %}
                                 <span class="badge" style="background-color: red">مقاله ویژه</span>
                             {% endif %}

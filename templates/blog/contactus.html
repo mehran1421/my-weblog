@@ -1,0 +1,88 @@
+{% extends 'blog/base.html' %}
+{% load static %}
+
+{% block title %}
+    تماس با ما
+{% endblock %}
+
+{% block bala %}
+    تماس با ما
+{% endblock %}
+
+<div class="culmn">
+    {% block contactus %}
+        <!--Call To Action Section-->
+        <section id="action" class="action roomy-100">
+            <div class="container">
+                <div class="row">
+                    <div class="main_action text-center">
+                        <div class="col-md-4">
+                            <div class="action_item">
+                                <i class="fa fa-map-marker"></i>
+                                <h4 class="text-uppercase m-top-20">آدرس</h4>
+                                <p>{{ object_list.address }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="action_item">
+                                <i class="fa fa-headphones"></i>
+                                <h4 class="text-uppercase m-top-20">گیتهاب</h4>
+                                <p>{{ object_list.github }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="action_item">
+                                <i class="fa fa-envelope-o"></i>
+                                <h4 class="text-uppercase m-top-20">ایمیل</h4>
+                                <p>{{ object_list.email }} <br/>
+                                    {{ object_list.email2 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- map section-->
+        <div id="map" class="map">
+            <div class="ourmap"></div>
+        </div><!-- End off Map section-->
+
+        <!-- scroll up-->
+        <div class="scrollup">
+            <a href="#"><i class="fa fa-chevron-up"></i></a>
+        </div><!-- End off scroll up -->
+
+
+        </div>
+    {% endblock %}
+
+
+<!-- paradise slider js -->
+{% block add_script %}
+    <script src="http://maps.google.com/maps/api/js?key=AIzaSyD_tAQD36pKp9v4at5AnpGbvBUsLCOSJx8"></script>
+    <script src="{% static 'js/gmaps.min.js' %}"></script>
+    <script>
+        var map = new GMaps({
+            el: '.ourmap',
+            lat: 35.715298,
+            lng: 51.404343,
+            scrollwheel: false,
+            zoom: 15,
+            zoomControl: true,
+            panControl: false,
+
+            streetViewControl: false,
+            mapTypeControl: false,
+            overviewMapControl: false,
+            clickable: false,
+            styles: [{
+                'stylers': [{'hue': 'gray'}, {saturation: -100},
+                    {gamma: 0.80}]
+            }]
+        });
+
+    </script>
+
+{% endblock %}

@@ -62,25 +62,6 @@ class Category(models.Model):
     objects = CategoryManager()
 
 
-class Owner(models.Model):
-    title = models.CharField(max_length=200, verbose_name="تایتل")
-    description = RichTextUploadingField(verbose_name="توضیحات")
-    more = RichTextUploadingField(verbose_name="توضیحات بیشتر")
-    thumbnail = models.ImageField(upload_to="images", verbose_name="عکس")
-    uni = models.CharField(max_length=200, verbose_name="دانشگاه")
-    comp = models.CharField(max_length=200, default='دانشجو', verbose_name="شغل")
-    email = models.EmailField(verbose_name="ایمل")
-    insta = models.CharField(max_length=200, verbose_name="لینک اینستاگرام")
-    github = models.CharField(max_length=200, verbose_name="لینک گیتهاب")
-    wat = models.CharField(max_length=200, verbose_name="لینک واتساپ")
-    tel = models.CharField(max_length=200, verbose_name="لینک تلگرام")
-
-    class Meta:
-        verbose_name = "سازنده"
-        verbose_name_plural = "سازنده ها"
-
-    def __str__(self):
-        return self.title
 
 
 class Article(models.Model):

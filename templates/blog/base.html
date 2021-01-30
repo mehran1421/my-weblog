@@ -29,13 +29,14 @@
     <link rel="stylesheet" href="{% static 'star-ratings/css/star-ratings.css' %}">
     <script type="text/javascript" src="{% static 'star-ratings/js/dist/star-ratings.min.js' %}"></script>
 
-
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <!--For Plugins external css-->
     <!--<link rel="stylesheet" href="assets/css/plugins.css" />-->
 
     <!--Theme custom css -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block img_css %}
 
+    {% endblock %}
     <!--<link rel="stylesheet" href="assets/css/colors/maron.css">-->
 
     <!--Theme Responsive css-->
@@ -141,10 +142,7 @@
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-menu">
                     <i class="fa fa-bars"></i>
                 </button>
-                <a class="navbar-brand" href="../index.html">
-                    <img src="{% static 'images/logo.png' %}" class="logo logo-display" alt="">
-                    <img src="{% static 'images/logo-black.png' %}" class="logo logo-scrolled" alt="">
-                </a>
+
             </div>
             <!-- End Header Navigation -->
             <!-- Collect the nav links, forms, and other content for toggling -->
@@ -153,8 +151,8 @@
                     <li><a href="../index.html">home</a></li>
                     <li><a href="../aboutus.html">about</a></li>
                     <li><a href="../model.html">our models</a></li>
-                    <li><a href="{% url 'blog:articleList' %}">blog</a></li>
-                    <li><a href="../contactus.html">contact</a></li>
+                    <li><a href="{% url 'blog:articleList' %}">وبلاگ</a></li>
+                    <li><a href="{% url 'contactUs:contact' %}">تماس با ما</a></li>
                 </ul>
             </div><!-- /.navbar-collapse -->
         </div>
@@ -166,9 +164,9 @@
             <div class="row">
                 <div class="main_home text-center">
                     <div class="about_text">
-                        <h1 class="text-white text-uppercase">{% title %}</h1>
+                        <h1 class="text-white text-uppercase">{%  title %}</h1>
                         <ol class="breadcrumb">
-                            <li><a href="../index.html">خانه</a></li>
+                            <li><a href="../index.html">{% block bala %}خانه{% endblock %}</a></li>
                             <li class="active"><a href="{% url 'blog:articleList' %}">وبلاگ</a></li>
                         </ol>
                     </div>
@@ -192,7 +190,8 @@
 
     {% endblock %}
     <!--Blog Features Section-->
-
+    {% block contactus %}
+    {% endblock %}
 
     <!--Company section-->
     <section id="company" class="company bg-light">
@@ -259,6 +258,8 @@
 
 <script src="{% static 'js/plugins.js' %}"></script>
 <script src="{% static 'js/main.js' %}"></script>
+{% block add_script %}
+{% endblock %}
 
 </body>
 </html>

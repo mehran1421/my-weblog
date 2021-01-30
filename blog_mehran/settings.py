@@ -40,12 +40,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    #django middelware
     'django.contrib.humanize',
 
+    #my app
     'account.apps.AccountConfig',
     'myblog.apps.MyblogConfig',
+    'owner.apps.OwnerConfig',
     'extension',
+
+    #other app that downlodd
     'crispy_forms',
     'comment',
     'ckeditor',

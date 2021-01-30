@@ -40,22 +40,23 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    #django middelware
+    # django middelware
     'django.contrib.humanize',
 
-    #my app
+    # my app
     'account.apps.AccountConfig',
     'myblog.apps.MyblogConfig',
     'owner.apps.OwnerConfig',
     'extension',
 
-    #other app that downlodd
+    # other app that downlodd
     'crispy_forms',
     'comment',
     'ckeditor',
     'widget_tweaks',
     'django_gravatar',
     'star_ratings',
+    'social_django',
 ]
 
 MIDDLEWARE = [
@@ -164,9 +165,16 @@ EMAIL_PORT = config('EMAIL_PORT')
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
-
 STAR_RATINGS_RERATE = False
-STAR_RATINGS_STAR_HEIGHT=16
+STAR_RATINGS_STAR_HEIGHT = 16
 # STAR_RATINGS_RANGE=10
 STAR_RATINGS_ANONYMOUS = True
 
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET')

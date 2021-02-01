@@ -21,16 +21,21 @@ from blog_mehran import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
     path('', include('myblog.urls')),
+    path('account/', include('account.urls')),
+    path('comment/', include('comment.urls')),
+    path('contact/', include('owner.urls')),
+    path('weatherblog/',include('weather.urls')),
+
     path('', include('django.contrib.auth.urls')),
+
     path('login/', Login.as_view(), name='login'),
     path('register/', Register.as_view(), name='register'),
     re_path(r'^activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,200})/$', activate,
             name='activate'),
-    path('account/', include('account.urls')),
     path('ckeditor/', include('ckeditor_uploader.urls')),
-    path('comment/', include('comment.urls')),
-    path('contact/', include('owner.urls')),
+
     re_path(r'^ratings/', include('star_ratings.urls', namespace='ratings')),
     path('', include('social_django.urls', namespace='social')),
 ]

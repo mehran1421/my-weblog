@@ -1,0 +1,55 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>بررسی آب و هوا</title>
+</head>
+<body>
+
+<div class="container"><h1 class="text-center">بررسی آب وهوا</h1></div>
+<div class="container">
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group inline-group">
+            {{ form.name }}
+            <button type="submit" class="btn  btn-primary " id="btn">بررسی</button>
+        </div>
+
+        {% if message %}
+            <div class="notification {{ message_class }}">
+                {{ message }}
+            </div>
+        {% endif %}
+
+    </form>
+</div>
+<div class="container" id="container">
+    <div class="card">
+        {% for i in city_weather %}
+            <div class="card-body">
+                <h5 class="card-title">{{ i.city }}</h5>
+                <h6 class="card-subtitle mb-2">وضعیت جوی این شهر: {{ i.temperature }} °F</h6>
+                <p class="card-text">{{ i.description }}</p>
+                <div id="img-container"> نمای جوی<img src="http://openweathermap.org/img/w/{{ i.icon }}.png">
+                </div>
+            </div>
+            <div class="media-right">
+                <a href="{% url 'weather:delete_city' i.city %}">
+                    <button class="delete"></button>
+                </a>
+            </div>
+        {% endfor %}
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+<link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
+<link rel="stylesheet" href="{% static 'css/bootsnav.css' %}">
+<script src="{% static 'js/vendor/jquery-1.11.2.min.js' %}"></script>
+<script src="{% static 'js/vendor/bootstrap.min.js' %}"></script>
+</body>
+</html>

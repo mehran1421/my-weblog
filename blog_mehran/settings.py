@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     # django middelware
     'django.contrib.humanize',
 
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
     'account.apps.AccountConfig',
     'myblog.apps.MyblogConfig',
     'owner.apps.OwnerConfig',
+    'weather.apps.WeatherConfig',
     'extension',
 
     # other app that downlodd
@@ -156,8 +158,10 @@ CKEDITOR_CONFIGS = {
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
+#for custom user models
 AUTH_USER_MODEL = 'account.User'
 
+#for send email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST')
 EMAIL_USE_TLS = True
@@ -165,11 +169,13 @@ EMAIL_PORT = config('EMAIL_PORT')
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
+#for star ratings
 STAR_RATINGS_RERATE = False
 STAR_RATINGS_STAR_HEIGHT = 16
 # STAR_RATINGS_RANGE=10
 STAR_RATINGS_ANONYMOUS = True
 
+#for login google
 AUTHENTICATION_BACKENDS = (
     'social_core.backends.google.GoogleOAuth2',
     'django.contrib.auth.backends.ModelBackend',

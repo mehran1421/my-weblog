@@ -27,6 +27,7 @@ from django.core.mail import EmailMessage
 
 from myblog.models import Article
 from .models import User
+from .tasks import send_email
 
 
 # Create your views here.
@@ -109,10 +110,7 @@ class Register(CreateView):
             'token': account_activation_token.make_token(user),
         })
         to_email = form.cleaned_data.get('email')
-        email = EmailMessage(
-            mail_subject, message, to=[to_email]
-        )
-        email.send()
+        send_email.delay(mail_subject,message,to_email)
         return HttpResponse('لینک فعال سازی به ایمیل شما ارسال شد. <a href="/login">ورود</a>')
 
 

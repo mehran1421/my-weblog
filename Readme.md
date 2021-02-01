@@ -16,5 +16,22 @@
 pip3 install -r requirements.txt
 python manage.py makemigrations
 python manage.py migrate
-python manage.py runserver
 ```
+# how to run project
+## first make file .env and write your informations
+'''
+SECRET_KEY = 'sample'
+
+EMAIL_HOST_PASSWORD='sample'
+EMAIL_HOST='sample'
+EMAIL_PORT=sample
+EMAIL_HOST_USER='sample'
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = 'sample'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'sample'
+'''
+## and 
+'''
+celery -A blog_mehran worker -l INFO
+python manage.py runserver
+'''

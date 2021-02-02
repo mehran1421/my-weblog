@@ -18,6 +18,7 @@ from comment.utils import (
 from comment.mixins import CanCreateMixin, CanEditMixin, CanDeleteMixin
 from comment.conf import settings
 from comment.messages import EmailError
+from account.tasks import send_email
 
 
 class BaseCommentView(FormView):
@@ -83,6 +84,8 @@ class CreateComment(CanCreateMixin, BaseCommentView):
             article = self.comment.content_object
             author_email = article.author.email
             user_email = self.comment.user.email
+            subject_email = ''
+            messages_email = ''
             if author_email == user_email:
                 author_email = False
                 user_email = False
@@ -93,34 +96,26 @@ class CreateComment(CanCreateMixin, BaseCommentView):
                     parent_email = False
 
             if author_email:
-                email = EmailMessage(
-                    "دیدگاه جدید",
-                    "دیدگاه جدیدی برای مقاله «{}» که شما نوینده آن هستید، ارسال شده:\n{}{}".format(article,
-                                                                                                   current_site,
-                                                                                                   reverse(
-                                                                                                       'blog:detail',
-                                                                                                       kwargs={
-                                                                                                           'slug': article.slug})),
-                    to=[author_email]
-                )
-                email.send()
+                subject_email = "دیدگاه جدید"
+                messages_email = "دیدگاه جدیدی برای مقاله «{}» که شما نوینده آن هستید، ارسال شده:\n{}{}".format(article,
+                                                                                                                current_site,
+                                                                                                                reverse(
+                                                                                                                    'blog:detail',
+                                                                                                                    kwargs={
+                                                                                                                        'slug': article.slug}))
+                send_email.delay(subject_email, messages_email, author_email)
 
             if user_email:
-                email = EmailMessage(
-                    "دیدگاه دریافت شد",
-                    "دیدگاه شما دریافت شد و به زودی به آن پاسخ می دهیم.",
-                    to=[user_email]
-                )
-                email.send()
+                subject_email ="دیدگاه دریافت شد"
+                messages_email="دیدگاه شما دریافت شد و به زودی به آن پاسخ می دهیم."
+                send_email.delay(subject_email,messages_email,user_email)
 
             if parent_email:
-                email = EmailMessage(
-                    "پاسخ به دیدگاه شما",
-                    "پاسخی به دیدگاه شما در مقاله «{}» ثبت شده است. برای مشاهده بر روی لینک زیر کلیک کنید:\n{}{}".format(
-                        article, current_site, reverse('blog:detail', kwargs={'slug': article.slug})),
-                    to=[parent_email]
-                )
-                email.send()
+                subject_email= "پاسخ به دیدگاه شما"
+                messages_email="پاسخی به دیدگاه شما در مقاله «{}» ثبت شده است. برای مشاهده بر روی لینک زیر کلیک کنید:\n{}{}".format(
+                        article, current_site, reverse('blog:detail', kwargs={'slug': article.slug}))
+
+                send_email.delay(subject_email,messages_email,parent_email)
 
         return self.render_to_response(self.get_context_data())
 

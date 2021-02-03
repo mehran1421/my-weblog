@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'django_gravatar',
     'star_ratings',
     'social_django',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -158,10 +159,10 @@ CKEDITOR_CONFIGS = {
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
-#for custom user models
+# for custom user models
 AUTH_USER_MODEL = 'account.User'
 
-#for send email
+# for send email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST')
 EMAIL_USE_TLS = True
@@ -169,13 +170,13 @@ EMAIL_PORT = config('EMAIL_PORT')
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
-#for star ratings
+# for star ratings
 STAR_RATINGS_RERATE = False
 STAR_RATINGS_STAR_HEIGHT = 16
 # STAR_RATINGS_RANGE=10
 STAR_RATINGS_ANONYMOUS = True
 
-#for login google
+# for login google
 AUTHENTICATION_BACKENDS = (
     'social_core.backends.google.GoogleOAuth2',
     'django.contrib.auth.backends.ModelBackend',
@@ -185,6 +186,6 @@ SOCIAL_AUTH_URL_NAMESPACE = 'social'
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY')
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET')
 
-#for celery config
+# for celery config
 CELERY_BROKER_URL = 'redis://localhost:6379'
 CELERY_TASK_SERIALIZER = 'json'

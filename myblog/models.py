@@ -120,6 +120,9 @@ class Article(models.Model):
 
     thumbnail_tag.short_description = "عکس"
 
+    def hit_count(self):
+        return self.hits.count()
+
     objects = ArticleManager()
 
 

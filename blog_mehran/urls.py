@@ -26,7 +26,12 @@ urlpatterns = [
     path('account/', include('account.urls')),
     path('comment/', include('comment.urls')),
     path('contact/', include('owner.urls')),
-    path('weatherblog/',include('weather.urls')),
+    path('weatherblog/', include('weather.urls')),
+
+    # api
+    path('api/posts/', include('myblog.api.urls')),
+    path('api/account/', include('account.api.urls')),
+
 
     path('', include('django.contrib.auth.urls')),
 
@@ -38,6 +43,7 @@ urlpatterns = [
 
     re_path(r'^ratings/', include('star_ratings.urls', namespace='ratings')),
     path('', include('social_django.urls', namespace='social')),
+    path('api-auth/', include('rest_framework.urls'))
 ]
 
 if settings.DEBUG:

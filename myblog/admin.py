@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Article,Category,IPAddress
+from .models import Article,Category,ArticleHit
 # Register your models here.
 
 def make_published(modeladmin,request,queryset):
@@ -52,4 +52,4 @@ class OwnerAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Article, ArticleAdmin)
-admin.site.register(IPAddress)
+admin.site.register(ArticleHit)

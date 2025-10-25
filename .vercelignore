@@ -1,0 +1,35 @@
+# Ignore development files
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
+
+# Ignore local database
+db.sqlite3
+
+# Ignore media files (upload separately if needed)
+static/media_root/
+
+# Ignore development settings
+blog_mehran/settings.py
+
+# Ignore documentation
+Readme.md
+*.md

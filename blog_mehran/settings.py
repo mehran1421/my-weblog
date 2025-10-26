@@ -47,7 +47,6 @@ INSTALLED_APPS = [
     # my app
     'account.apps.AccountConfig',
     'myblog.apps.MyblogConfig',
-    'owner.apps.OwnerConfig',
     'weather.apps.WeatherConfig',
     'extension',
 

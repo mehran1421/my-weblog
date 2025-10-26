@@ -25,7 +25,6 @@ urlpatterns = [
     path('', include('myblog.urls')),
     path('account/', include('account.urls')),
     path('comment/', include('comment.urls')),
-    path('contact/', include('owner.urls')),
     path('weatherblog/', include('weather.urls')),
 
     # api

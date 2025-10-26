@@ -9,6 +9,3 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
-    environment:
-      - DJANGO_SETTINGS_MODULE=myweblog.settings
-      - PYTHONUNBUFFERED=1

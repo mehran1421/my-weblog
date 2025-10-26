@@ -13,7 +13,7 @@ def handler(request):
     <title>وبلاگ مهران - موفقیت!</title>
     <style>
         body {
-            font-family: Tahoma, sans-serif;
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -64,9 +64,6 @@ def handler(request):
             margin: 10px 0;
             line-height: 1.6;
         }
-        .emoji {
-            font-size: 1.2em;
-        }
         .url {
             background: #e9ecef;
             padding: 10px;
@@ -79,27 +76,27 @@ def handler(request):
 </head>
 <body>
     <div class="container">
-        <h1><span class="emoji">🎉</span> تبریک! وبلاگ شما در Vercel کار می‌کند</h1>
+        <h1>🎉 تبریک! وبلاگ شما در Vercel کار می‌کند</h1>
         
         <div class="success">
-            <strong><span class="emoji">✅</span> استقرار موفقیت‌آمیز بود!</strong><br>
+            <strong>✅ استقرار موفقیت‌آمیز بود!</strong><br>
             پروژه Django شما حالا در Vercel در حال اجرا است.
         </div>
         
         <div class="info">
-            <strong><span class="emoji">🔗</span> لینک پروژه شما:</strong><br>
+            <strong>🔗 لینک پروژه شما:</strong><br>
             <div class="url">https://my-weblog-sigma.vercel.app</div>
         </div>
         
         <div class="info">
-            <strong><span class="emoji">📝</span> وضعیت فعلی:</strong><br>
+            <strong>📝 وضعیت فعلی:</strong><br>
             • محافظت غیرفعال شد ✅<br>
             • پروژه در Vercel استقرار یافت ✅<br>
-            • Django application نیاز به تنظیمات بیشتری دارد ⚠️
+            • Handler ساده کار می‌کند ✅
         </div>
         
         <div class="steps">
-            <h2><span class="emoji">🚀</span> مراحل بعدی برای Django کامل:</h2>
+            <h2>🚀 مراحل بعدی برای Django کامل:</h2>
             <ol>
                 <li><strong>تنظیم دیتابیس PostgreSQL:</strong> از سرویس‌هایی مثل Supabase یا PlanetScale استفاده کنید</li>
                 <li><strong>اصلاح Django settings:</strong> تنظیمات مناسب برای Vercel</li>
@@ -111,13 +108,13 @@ def handler(request):
         </div>
         
         <div class="success">
-            <strong><span class="emoji">🎯</span> نتیجه:</strong><br>
+            <strong>🎯 نتیجه:</strong><br>
             پروژه شما با موفقیت در Vercel استقرار یافت و محافظت غیرفعال شد!<br>
             حالا می‌توانید از داشبورد Vercel برای مدیریت استفاده کنید.
         </div>
         
         <div class="info">
-            <strong><span class="emoji">🔗</span> لینک‌های مفید:</strong><br>
+            <strong>🔗 لینک‌های مفید:</strong><br>
             • <a href="https://vercel.com/dashboard" target="_blank">داشبورد Vercel</a><br>
             • <a href="https://vercel.com/docs" target="_blank">مستندات Vercel</a><br>
             • <a href="https://supabase.com/" target="_blank">Supabase (دیتابیس)</a>

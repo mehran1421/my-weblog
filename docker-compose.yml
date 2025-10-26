@@ -13,8 +13,6 @@ services:
     environment:
       - DEBUG=1
       - DJANGO_SETTINGS_MODULE=blog_mehran.settings
-    env_file:
-      - .env  # اختیاری، اگر فایل env داری
 
 volumes:
   sqlite_data:

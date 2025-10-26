@@ -3,16 +3,12 @@ version: "3.9"
 services:
   web:
     build: .
-    container_name: myweblog_web
+    container_name: my_weblog
     command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .:/app               # برای سینک کدها با فولدر پروژه
-      - sqlite_data:/app/db.sqlite3  # برای نگه داشتن دیتابیس پایدار
     ports:
       - "8000:8000"
+    volumes:
+      - .:/app
     environment:
-      - DEBUG=1
-      - DJANGO_SETTINGS_MODULE=blog_mehran.settings
-
-volumes:
-  sqlite_data:
+      - DJANGO_SETTINGS_MODULE=myweblog.settings
+      - PYTHONUNBUFFERED=1

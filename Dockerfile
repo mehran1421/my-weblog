@@ -1,22 +1,40 @@
-# ===== Dockerfile =====
+# Base image
 FROM python:3.11-slim
 
-# تنظیمات محیطی برای تمیزتر بودن اجرا
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# محل پروژه در داخل کانتینر
+# Set working directory
 WORKDIR /app
 
-# نصب پکیج‌های موردنیاز
-COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# Install system dependencies (for Pillow, psycopg2, etc.)
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libjpeg-dev \
+    zlib1g-dev \
+    libpng-dev \
+    libfreetype6-dev \
+    liblcms2-dev \
+    libopenjp2-7-dev \
+    tcl-dev \
+    tk-dev \
+    python3-tk \
+    && rm -rf /var/lib/apt/lists/*
 
-# کپی کل پروژه داخل کانتینر
-COPY . .
+# Copy dependency list
+COPY requirements.txt /app/
 
-# اکسپوز پورت 8000 برای دسترسی از بیرون
+# Upgrade pip to avoid celery metadata bug
+RUN pip install --upgrade pip==24.0
+
+# Install Python dependencies
+RUN pip install -r requirements.txt
+
+# Copy project files
+COPY . /app/
+
+# Collect static files (optional, Django)
+RUN python manage.py collectstatic --noinput || true
+
+# Expose port 8000
 EXPOSE 8000
 
-# اجرای سرور توسعه جنگو
+# Run Django app
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

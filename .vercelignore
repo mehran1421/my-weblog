@@ -34,3 +34,11 @@ blog_mehran/settings.py
 Readme.md
 *.md
 
+# Ignore large asset directories
+assets/
+static/
+templates/
+
+# Ignore migrations (we'll create fresh ones)
+*/migrations/
+

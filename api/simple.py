@@ -10,10 +10,10 @@ def handler(request):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>وبلاگ مهران - موفقیت!</title>
+    <title>وبلاگ مهران</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: Tahoma, sans-serif;
             margin: 0;
             padding: 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -64,42 +64,31 @@ def handler(request):
             margin: 10px 0;
             line-height: 1.6;
         }
-        .url {
-            background: #e9ecef;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: monospace;
-            margin: 10px 0;
-            word-break: break-all;
+        .emoji {
+            font-size: 1.2em;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎉 تبریک! وبلاگ شما در Vercel کار می‌کند</h1>
+        <h1><span class="emoji">🎉</span> تبریک! وبلاگ شما در Vercel کار می‌کند</h1>
         
         <div class="success">
-            <strong>✅ استقرار موفقیت‌آمیز بود!</strong><br>
+            <strong><span class="emoji">✅</span> استقرار موفقیت‌آمیز بود!</strong><br>
             پروژه Django شما حالا در Vercel در حال اجرا است.
         </div>
         
         <div class="info">
-            <strong>🔗 لینک پروژه شما:</strong><br>
-            <div class="url">https://my-weblog-sigma.vercel.app</div>
-        </div>
-        
-        <div class="info">
-            <strong>📝 وضعیت فعلی:</strong><br>
-            • محافظت غیرفعال شد ✅<br>
-            • پروژه در Vercel استقرار یافت ✅<br>
-            • Handler ساده کار می‌کند ✅
+            <strong><span class="emoji">📝</span> نکات مهم:</strong><br>
+            • این یک نسخه ساده است<br>
+            • برای استفاده کامل، باید دیتابیس و فایل‌های static را تنظیم کنید<br>
+            • فایل‌های media باید در سرویس‌های خارجی ذخیره شوند
         </div>
         
         <div class="steps">
-            <h2>🚀 مراحل بعدی برای Django کامل:</h2>
+            <h2><span class="emoji">🚀</span> مراحل بعدی:</h2>
             <ol>
                 <li><strong>تنظیم دیتابیس PostgreSQL:</strong> از سرویس‌هایی مثل Supabase یا PlanetScale استفاده کنید</li>
-                <li><strong>اصلاح Django settings:</strong> تنظیمات مناسب برای Vercel</li>
                 <li><strong>آپلود فایل‌های static به CDN:</strong> از Cloudflare یا AWS CloudFront استفاده کنید</li>
                 <li><strong>تنظیم فایل‌های media در AWS S3:</strong> برای ذخیره تصاویر و فایل‌ها</li>
                 <li><strong>تنظیم متغیرهای محیطی:</strong> SECRET_KEY، DATABASE_URL و غیره</li>
@@ -107,17 +96,16 @@ def handler(request):
             </ol>
         </div>
         
-        <div class="success">
-            <strong>🎯 نتیجه:</strong><br>
-            پروژه شما با موفقیت در Vercel استقرار یافت و محافظت غیرفعال شد!<br>
-            حالا می‌توانید از داشبورد Vercel برای مدیریت استفاده کنید.
+        <div class="info">
+            <strong><span class="emoji">🔗</span> لینک‌های مفید:</strong><br>
+            • <a href="https://vercel.com/docs" target="_blank">مستندات Vercel</a><br>
+            • <a href="https://docs.djangoproject.com/" target="_blank">مستندات Django</a><br>
+            • <a href="https://supabase.com/" target="_blank">Supabase (دیتابیس)</a>
         </div>
         
-        <div class="info">
-            <strong>🔗 لینک‌های مفید:</strong><br>
-            • <a href="https://vercel.com/dashboard" target="_blank">داشبورد Vercel</a><br>
-            • <a href="https://vercel.com/docs" target="_blank">مستندات Vercel</a><br>
-            • <a href="https://supabase.com/" target="_blank">Supabase (دیتابیس)</a>
+        <div class="success">
+            <strong><span class="emoji">🎯</span> وضعیت فعلی:</strong><br>
+            پروژه شما با موفقیت در Vercel استقرار یافت و محافظت غیرفعال شد!
         </div>
     </div>
 </body>

@@ -11,9 +11,5 @@
       "src": "/(.*)",
       "dest": "api/index.py"
     }
-  ],
-  "env": {
-    "DJANGO_SETTINGS_MODULE": "blog_mehran.settings_production"
-  },
-  "buildCommand": "./build.sh"
+  ]
 }

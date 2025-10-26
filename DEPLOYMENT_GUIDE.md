@@ -82,3 +82,4 @@ vercel inspect
 # حذف پروژه
 vercel remove
 ```
+
